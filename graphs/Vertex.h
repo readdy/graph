@@ -8,8 +8,11 @@
 #include <ostream>
 #include <vector>
 
+using ParticleTypeId = std::size_t;
+
 namespace graphs {
 
+template<typename Vertex>
 class Graph;
 
 /**
@@ -83,7 +86,7 @@ public:
     }
 
 private:
-    friend class graphs::Graph;
+    friend class graphs::Graph<graphs::Vertex>;
 
     /**
      * the edges (i.e., pointers to neighboring vertices)
