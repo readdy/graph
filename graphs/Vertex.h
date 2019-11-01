@@ -7,6 +7,7 @@
 #include <list>
 #include <ostream>
 #include <vector>
+#include <sstream>
 
 using ParticleTypeId = std::size_t;
 
@@ -61,11 +62,7 @@ public:
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
-        os << "Vertex[particleIndex: " << vertex.particleIndex << ", neighbors=[";
-        for (const auto neighbor : vertex.neighbors_) {
-            os << neighbor->particleIndex << ",";
-        }
-        os << "]]";
+        os << fmt::format("{}", vertex);
         return os;
     }
 
@@ -92,9 +89,31 @@ private:
      * the edges (i.e., pointers to neighboring vertices)
      */
     std::vector<vertex_ptr> neighbors_{};
-    mutable bool visited;
+    mutable bool visited {false};
 
     ParticleTypeId particleType_{0};
 };
 
+}
+
+namespace fmt {
+template <>
+struct formatter<graphs::Vertex> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
+
+    template <typename FormatContext>
+    auto format(const graphs::Vertex &v, FormatContext &ctx) {
+        std::stringstream ss;
+        bool first {true};
+        for (const auto neighbor : v.neighbors()) {
+            if(!first) {
+                ss << ",";
+            }
+            ss << neighbor->particleIndex;
+            first = false;
+        }
+        return format_to(ctx.out(), "Vertex[particleIndex: {}, neighbors=[{}]]", v.particleIndex, ss.str());
+    }
+};
 }

@@ -18,12 +18,6 @@ template<typename Vertex>
 inline Graph<Vertex>::~Graph() = default;
 
 template<typename Vertex>
-inline Graph<Vertex>::Graph(const graphs::Graph<Vertex> &) {} = delete;
-
-template<typename Vertex>
-inline Graph<Vertex> &Graph<Vertex>::operator=(const Graph<Vertex> &) = delete;
-
-template<typename Vertex>
 template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
 inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                                        const TripleCallback &triple_callback,
@@ -77,6 +71,46 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
             }
         }
     }
+}
+
+template<typename Vertex>
+inline const typename Graph<Vertex>::VertexList &Graph<Vertex>::vertices() const {
+    return _vertices;
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList &Graph<Vertex>::vertices() {
+    return _vertices;
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::firstVertex() {
+    return vertices().begin();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::lastVertex() {
+    return --vertices().end();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::toRef(const Vertex &v) {
+    auto it = std::find(std::begin(_vertices), std::end(_vertices), v);
+    if (it != std::end(_vertices)) {
+        return {it};
+    }
+    throw std::invalid_argument(fmt::format(
+            "Provided vertex {} was not part of the graph, no ref could be created!", v
+    ));
+}
+
+template<typename Vertex>
+inline bool Graph<Vertex>::containsEdge(const Graph::Edge &edge) const {
+    const auto& [v1, v2] = edge;
+    const auto &v1Neighbors = v1->neighbors();
+    const auto &v2Neighbors = v2->neighbors();
+    return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
+           && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1) != v2Neighbors.end();
 }
 
 }

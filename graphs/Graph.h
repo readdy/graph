@@ -32,48 +32,25 @@ public:
 
     virtual ~Graph();
 
-    Graph(const Graph &);
+    Graph(const Graph &) = delete;
 
-    Graph &operator=(const Graph &);
+    Graph &operator=(const Graph &) = delete;
 
     Graph(Graph &&) = default;
 
     Graph &operator=(Graph &&) = default;
 
-    const VertexList &vertices() const {
-        return _vertices;
-    }
+    const VertexList &vertices() const;
 
-    VertexList &vertices() {
-        return _vertices;
-    }
+    VertexList &vertices();
 
-    VertexPtr firstVertex() {
-        return vertices().begin();
-    }
+    VertexPtr firstVertex();
 
-    VertexPtr lastVertex() {
-        return --vertices().end();
-    }
+    VertexPtr lastVertex();
 
-    VertexPtr toRef(const Vertex &v) {
-        auto it = std::find(std::begin(_vertices), std::end(_vertices), v);
-        if (it != std::end(_vertices)) {
-            return {it};
-        }
-        //throw std::invalid_argument(fmt::format(
-        //        "Provided vertex {} was not part of the graph, no ref could be created!", v
-        //));
-        // todo
-    }
+    VertexPtr toRef(const Vertex &v);
 
-    bool containsEdge(const Edge &edge) const {
-        const auto& [v1, v2] = edge;
-        const auto &v1Neighbors = v1->neighbors();
-        const auto &v2Neighbors = v2->neighbors();
-        return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
-               && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1) != v2Neighbors.end();
-    }
+    bool containsEdge(const Edge &edge) const;
 
     bool containsEdge(VertexPtr v1, VertexPtr v2) const {
         return containsEdge(std::tie(v1, v2));
