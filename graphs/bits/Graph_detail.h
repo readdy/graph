@@ -105,12 +105,145 @@ inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::toRef(const Vertex &v) {
 }
 
 template<typename Vertex>
-inline bool Graph<Vertex>::containsEdge(const Graph::Edge &edge) const {
+inline bool Graph<Vertex>::containsEdge(const Edge &edge) const {
     const auto& [v1, v2] = edge;
     const auto &v1Neighbors = v1->neighbors();
     const auto &v2Neighbors = v2->neighbors();
     return std::find(v1Neighbors.begin(), v1Neighbors.end(), v2) != v1Neighbors.end()
            && std::find(v2Neighbors.begin(), v2Neighbors.end(), v1) != v2Neighbors.end();
 }
+
+template<typename Vertex>
+inline bool Graph<Vertex>::containsEdge(VertexPtr v1, VertexPtr v2) const {
+    return containsEdge(std::tie(v1, v2));
+}
+
+template<typename Vertex>
+inline const Vertex &Graph<Vertex>::vertexForParticleIndex(std::size_t particleIndex) const {
+    auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
+        return vertex.particleIndex == particleIndex;
+    });
+    if (it != _vertices.end()) {
+        return *it;
+    }
+    throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::addVertex(std::size_t particleIndex, ParticleTypeId particleType) {
+    _vertices.emplace_back(particleIndex, particleType);
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::addEdge(Graph::VertexPtr v1, Graph::VertexPtr v2) {
+    addVertexNeighbor(*v1, v2);
+    addVertexNeighbor(*v2, v1);
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::addEdge(const Graph::Edge &edge) {
+    addEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
+    auto it1 = vertexItForParticleIndex(particleIndex1);
+    auto it2 = vertexItForParticleIndex(particleIndex2);
+    if (it1 != _vertices.end() && it2 != _vertices.end()) {
+        addVertexNeighbor(*it1, it2);
+        addVertexNeighbor(*it2, it1);
+    } else {
+        throw std::invalid_argument("the particles indices did not exist...");
+    }
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::removeEdge(Graph::VertexPtr v1, Graph::VertexPtr v2) {
+    assert(v1 != v2);
+    removeVertexNeighbor(*v1, v2);
+    removeVertexNeighbor(*v2, v1);
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::removeEdge(const Graph::Edge &edge) {
+    removeEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::removeVertex(Graph::VertexPtr vertex) {
+    removeNeighborsEdges(vertex);
+    _vertices.erase(vertex);
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::removeParticle(std::size_t particleIndex) {
+    auto v = vertexItForParticleIndex(particleIndex);
+    if (v != _vertices.end()) {
+        removeNeighborsEdges(v);
+        _vertices.erase(v);
+    } else {
+        throw std::invalid_argument(
+                "the vertex corresponding to the particle with topology index " + std::to_string(particleIndex) +
+                " did not exist in the graph");
+    }
+}
+
+template<typename Vertex>
+inline const std::vector<typename Graph<Vertex>::Edge> &Graph<Vertex>::edges() const {
+    if(_dirty) {
+        _edges.clear();
+        findEdges([this](const Edge &tup) {
+            _edges.push_back(tup);
+        });
+        _dirty = false;
+    }
+    return _edges;;
+}
+
+template<typename Vertex>
+inline bool Graph<Vertex>::hasEdge(const Graph::Edge &edge) const {
+    const auto &v1 = std::get<0>(edge);
+    const auto &v2 = std::get<1>(edge);
+    const auto &e = edges();
+    auto it = std::find_if(e.begin(), e.end(), [&v1, &v2](const auto& ee) {
+        const auto &[ev1, ev2] = ee;
+        return (v1 == ev1 && v2 == ev2) || (v1 == ev2 && v2 == ev1);
+    });
+    return it != e.end();
+}
+
+template<typename Vertex>
+template<typename TupleCallback>
+inline void Graph<Vertex>::findEdges(const TupleCallback &edgeCallback) const {
+    for (auto &&v : vertices()) {
+        v.visited = false;
+    }
+
+    auto &vert = const_cast<VertexList &>(_vertices);
+    for (auto it = vert.begin(); it != vert.end(); ++it) {
+        it->visited = true;
+        auto &neighbors = it->neighbors();
+        for (auto it_neigh : neighbors) {
+            if (!it_neigh->visited) {
+                const Edge e{std::tie(it, it_neigh)};
+                edgeCallback(e);
+            }
+        }
+    }
+}
+
+template<typename Vertex>
+inline auto Graph<Vertex>::findNTuples() {
+    auto tuple = std::make_tuple(std::vector<Edge>(), std::vector<Path2>(), std::vector<Path3>());
+    findNTuples([&](const Edge &tup) {
+        std::get<0>(tuple).push_back(tup);
+    }, [&](const Path2 &path2) {
+        std::get<1>(tuple).push_back(path2);
+    }, [&](const Path3 &path3) {
+        std::get<2>(tuple).push_back(path3);
+    });
+    return tuple;
+}
+
 
 }
