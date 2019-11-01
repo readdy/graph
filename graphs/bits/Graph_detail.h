@@ -233,7 +233,9 @@ inline void Graph<Vertex>::findEdges(const TupleCallback &edgeCallback) const {
 }
 
 template<typename Vertex>
-inline auto Graph<Vertex>::findNTuples() {
+inline std::tuple<std::vector<typename Graph<Vertex>::Edge>,
+                  std::vector<typename Graph<Vertex>::Path2>,
+                  std::vector<typename Graph<Vertex>::Path3>> Graph<Vertex>::findNTuples() {
     auto tuple = std::make_tuple(std::vector<Edge>(), std::vector<Path2>(), std::vector<Path3>());
     findNTuples([&](const Edge &tup) {
         std::get<0>(tuple).push_back(tup);
