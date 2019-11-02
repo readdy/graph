@@ -7,8 +7,16 @@
 #include <graphs/Vertex.h>
 #include <iostream>
 
+auto debug = [](const std::string &str) {
+    std::cerr << "DEBUG: " << str << std::endl;
+};
+
 TEST_CASE("dummy") {
     graphs::Graph<graphs::Vertex> g;
-    graphs::Vertex v;
-    g.toRef(v);
+    g.addVertex(0, 0);
+    g.addVertex(1, 0);
+    CHECK_FALSE(g.isConnected());
+    g.addVertexNeighbor<&debug>(*g.firstVertex(), g.lastVertex());
+    CHECK(g.isConnected());
+    g.addVertexNeighbor<&debug>(*g.firstVertex(), g.lastVertex());
 }

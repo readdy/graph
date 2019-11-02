@@ -247,5 +247,136 @@ inline std::tuple<std::vector<typename Graph<Vertex>::Edge>,
     return tuple;
 }
 
+template<typename Vertex>
+template<auto debug>
+inline void Graph<Vertex>::addVertexNeighbor(Vertex &v1, const Graph::VertexPtr &v2) {
+    _dirty = true;
+    auto found = std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2) == v1.neighbors_.end();
+    if(found) {
+        v1.neighbors_.push_back(v2);
+    }
+    if constexpr (debug != nullptr) {
+        if(!found) {
+            (*debug)(fmt::format("tried to add an already existing edge ({} - {})",
+                                 v1.particleIndex, v2->particleIndex));
+        }
+    }
+}
+
+template<typename Vertex>
+template<auto debug>
+inline void Graph<Vertex>::removeVertexNeighbor(Vertex &v1, const Graph::VertexPtr &v2) {
+    _dirty = true;
+    auto it = std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2);
+    if (it != v1.neighbors_.end()) {
+        v1.neighbors_.erase(it);
+    } else {
+        if constexpr (debug != nullptr) {
+            (*debug)(fmt::format("tried to remove a non existing edge {} - {}", v1.particleIndex, v2->particleIndex));
+        }
+    }
+}
+
+template<typename Vertex>
+inline bool Graph<Vertex>::isConnected() const {
+    resetVertexVisitedState();
+
+    std::vector<typename VertexList::const_iterator> unvisited;
+    unvisited.emplace_back(_vertices.begin());
+    std::size_t nVisited = 0;
+    while(!unvisited.empty()) {
+        auto vertex = unvisited.back();
+        unvisited.pop_back();
+        if(!vertex->visited) {
+            vertex->visited = true;
+            ++nVisited;
+            for (auto neighbor : vertex->neighbors()) {
+                if (!neighbor->visited) {
+                    unvisited.emplace_back(neighbor);
+                }
+            }
+        }
+    }
+    return nVisited == _vertices.size();
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::resetVertexVisitedState() const {
+    std::for_each(_vertices.begin(), _vertices.end(), [](const Vertex &v) { v.visited = false; });
+}
+
+template<typename Vertex>
+inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponentsDestructive() {
+    _dirty = true;
+    std::vector<VertexList> subVertexLists;
+    {
+        std::vector<std::vector<VertexPtr>> components;
+
+        std::for_each(_vertices.begin(), _vertices.end(), [](Vertex &v) { v.visited = false; });
+
+        for(auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+            if(!it->visited) {
+                // got a new component
+                components.emplace_back();
+                subVertexLists.emplace_back();
+
+                auto& component = components.back();
+
+                std::vector<VertexPtr> unvisitedInComponent;
+                unvisitedInComponent.emplace_back(it);
+                while (!unvisitedInComponent.empty()) {
+                    auto& vertex = unvisitedInComponent.back();
+                    unvisitedInComponent.pop_back();
+                    if (!vertex->visited) {
+                        vertex->visited = true;
+                        {
+                            component.emplace_back(vertex);
+                        }
+                        for (auto neighbor : vertex->neighbors()) {
+                            if (!neighbor->visited) {
+                                unvisitedInComponent.emplace_back(neighbor);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        {
+            // transfer vertices
+            auto it_components = components.begin();
+            auto it_subLists = subVertexLists.begin();
+            for(; it_components != components.end(); ++it_components, ++it_subLists) {
+                for(const auto& vertex_ref : *it_components) {
+                    it_subLists->splice(it_subLists->end(), _vertices, vertex_ref);
+                }
+            }
+        }
+    }
+
+    std::vector<Graph> subGraphs;
+    subGraphs.reserve(subVertexLists.size());
+    {
+        for (auto &subVertexList : subVertexLists) {
+            subGraphs.emplace_back(std::move(subVertexList));
+        }
+    }
+    return std::move(subGraphs);
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::removeNeighborsEdges(Graph::VertexPtr vertex) {
+    std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [this, vertex](const auto neighbor) {
+        removeVertexNeighbor(*neighbor, vertex);
+    });
+    _dirty = true;
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForParticleIndex(std::size_t particleIndex) {
+    return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
+        return vertex.particleIndex == particleIndex;
+    });
+}
 
 }

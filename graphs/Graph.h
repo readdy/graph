@@ -58,26 +58,11 @@ public:
 
     void addVertex(std::size_t particleIndex, ParticleTypeId particleType);
 
-    void addVertexNeighbor(Vertex& v1, const VertexPtr &v2) {
-        _dirty = true;
-        if (std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2) == v1.neighbors_.end()) {
-            v1.neighbors_.push_back(v2);
-        } else {
-            //log::debug("tried to add an already existing edge ({} - {})", v1.particleIndex, v2->particleIndex);
-            // todo
-        }
-    }
+    template<auto debug = nullptr>
+    void addVertexNeighbor(Vertex& v1, const VertexPtr &v2);
 
-    void removeVertexNeighbor(Vertex& v1, const VertexPtr &v2) {
-        _dirty = true;
-        decltype(v1.neighbors_.begin()) it;
-        if ((it = std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2)) != v1.neighbors_.end()) {
-            v1.neighbors_.erase(it);
-        } else {
-            //log::debug("tried to remove a non existing edge {} - {}", v1.particleIndex, v2->particleIndex);
-            // todo
-        }
-    }
+    template<auto debug = nullptr>
+    void removeVertexNeighbor(Vertex& v1, const VertexPtr &v2);
 
     void addEdge(VertexPtr v1, VertexPtr v2);
 
@@ -121,18 +106,11 @@ private:
     mutable bool _dirty {true};
     mutable std::vector<Edge> _edges;
 
-    void removeNeighborsEdges(VertexPtr vertex) {
-        std::for_each(std::begin(vertex->neighbors()), std::end(vertex->neighbors()), [this, vertex](const auto neighbor) {
-            removeVertexNeighbor(*neighbor, vertex);
-        });
-        _dirty = true;
-    }
+    void resetVertexVisitedState() const;
 
-    auto vertexItForParticleIndex(std::size_t particleIndex) -> decltype(_vertices.begin()) {
-        return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
-            return vertex.particleIndex == particleIndex;
-        });
-    }
+    void removeNeighborsEdges(VertexPtr vertex);
+
+    VertexPtr vertexItForParticleIndex(std::size_t particleIndex);
 
 };
 
