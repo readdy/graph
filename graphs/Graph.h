@@ -6,6 +6,7 @@
 
 #include <list>
 #include <algorithm>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -64,8 +65,10 @@ public:
     template<auto debug = nullptr>
     void removeVertexNeighbor(Vertex& v1, const VertexPtr &v2);
 
+    template<auto debug = nullptr>
     void addEdge(VertexPtr v1, VertexPtr v2);
 
+    template<auto debug = nullptr>
     void addEdge(const Edge &edge);
 
     void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
@@ -83,6 +86,8 @@ public:
     const std::vector<Edge> &edges() const;
 
     bool hasEdge(const Edge &edge) const;
+
+    std::size_t nEdges() const;
 
     template<typename TupleCallback>
     void findEdges(const TupleCallback &edgeCallback) const;

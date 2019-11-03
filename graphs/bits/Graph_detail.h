@@ -35,7 +35,6 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
             auto vv_type = it_neigh->particleType();
             auto vv_idx = it_neigh->particleIndex;
             if (!it_neigh->visited) {
-                // todo log::trace("got type tuple ({}, {}) for particles {}, {}", v_type, vv_type, v_idx, vv_idx);
                 // got edge (v, vv), now look for N(v)\{vv} and N(vv)\(N(v) + v)
                 tuple_callback(std::tie(it, it_neigh));
                 for (auto quad_it_1 : neighbors) {
@@ -52,8 +51,6 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                             if (quad_it_2 != it && no_circle) {
                                 auto vvvv_type = quad_it_2->particleType();
                                 auto vvvv_idx = quad_it_2->particleIndex;
-                                // todo log::trace("got type quadruple ({}, {}, {}, {}) for particles {}, {}, {}, {}", vvv_type, v_type,
-                                //           vv_type, vvvv_type, vvv_idx, v_idx, vv_idx, vvvv_idx);
                                 quadruple_callback(std::tie(quad_it_1, it, it_neigh, quad_it_2));
                             }
                         }
@@ -64,8 +61,6 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                 if (it_neigh2 != it_neigh && it_neigh->particleIndex < it_neigh2->particleIndex) {
                     auto vvv_type = it_neigh2->particleType();
                     auto vvv_idx = it_neigh2->particleIndex;
-                    // todo log::trace("got type triple ({}, {}, {}) for particles {}, {}, {}", vv_type, v_type, vvv_type,
-                    //           vv_idx, v_idx, vvv_idx);
                     triple_callback(std::tie(it_neigh, it, it_neigh2));
                 }
             }
@@ -135,14 +130,16 @@ inline void Graph<Vertex>::addVertex(std::size_t particleIndex, ParticleTypeId p
 }
 
 template<typename Vertex>
+template<auto debug>
 inline void Graph<Vertex>::addEdge(Graph::VertexPtr v1, Graph::VertexPtr v2) {
-    addVertexNeighbor(*v1, v2);
-    addVertexNeighbor(*v2, v1);
+    addVertexNeighbor<debug>(*v1, v2);
+    addVertexNeighbor<debug>(*v2, v1);
 }
 
 template<typename Vertex>
+template<auto debug>
 inline void Graph<Vertex>::addEdge(const Graph::Edge &edge) {
-    addEdge(std::get<0>(edge), std::get<1>(edge));
+    addEdge<debug>(std::get<0>(edge), std::get<1>(edge));
 }
 
 template<typename Vertex>
@@ -197,7 +194,7 @@ inline const std::vector<typename Graph<Vertex>::Edge> &Graph<Vertex>::edges() c
         });
         _dirty = false;
     }
-    return _edges;;
+    return _edges;
 }
 
 template<typename Vertex>
@@ -377,6 +374,11 @@ inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForParticleIndex
     return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
         return vertex.particleIndex == particleIndex;
     });
+}
+
+template<typename Vertex>
+inline std::size_t Graph<Vertex>::nEdges() const {
+    return edges().size();
 }
 
 }

@@ -13,7 +13,9 @@ using ParticleTypeId = std::size_t;
 
 namespace graphs {
 
-template<typename Vertex>
+class Vertex;
+
+template<typename Vertex = graphs::Vertex>
 class Graph;
 
 /**

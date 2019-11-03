@@ -2,21 +2,218 @@
 // Created by mho on 10/28/19.
 //
 
+#include <iostream>
+#include <tuple>
+#include <utility>
+
 #include <catch2/catch.hpp>
+
 #include <graphs/Graph.h>
 #include <graphs/Vertex.h>
-#include <iostream>
 
 auto debug = [](const std::string &str) {
     std::cerr << "DEBUG: " << str << std::endl;
 };
 
-TEST_CASE("dummy") {
-    graphs::Graph<graphs::Vertex> g;
-    g.addVertex(0, 0);
-    g.addVertex(1, 0);
-    CHECK_FALSE(g.isConnected());
-    g.addVertexNeighbor<&debug>(*g.firstVertex(), g.lastVertex());
-    CHECK(g.isConnected());
-    g.addVertexNeighbor<&debug>(*g.firstVertex(), g.lastVertex());
+template<typename T, size_t... I>
+auto reverse_impl(T t, std::index_sequence<I...>) {
+    return std::make_tuple(std::get<sizeof...(I) - 1 - I>(std::forward<T>(t))...);
+}
+
+template<typename T>
+auto reverse(T t) {
+    return reverse_impl(std::forward<T>(t), std::make_index_sequence<std::tuple_size<T>::value>());
+}
+
+template<typename Tup>
+bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
+    auto tReverse = reverse<Tup>(t);
+    auto it = std::find_if(std::begin(v), std::end(v), [&](const Tup &other) {
+        return t == other;
+    });
+    auto itBack = std::find_if(std::begin(v), std::end(v), [&](const Tup &other) {
+        return tReverse == other;
+    });
+    auto containsForward = it != std::end(v);
+    auto containsBackward = itBack != std::end(v);
+
+    return containsForward ^ containsBackward;
+}
+
+auto fullyConnectedGraph(std::size_t size) {
+    graphs::Graph graph;
+    for(std::size_t i = 0; i < size; ++i) {
+        graph.addVertex(i, 0);
+    }
+    for(auto i = graph.vertices().begin(); i != graph.vertices().end(); ++i) {
+        for(auto j = std::next(i); j != graph.vertices().end(); ++j) {
+            graph.addEdge(i, j);
+        }
+    }
+    return graph;
+}
+
+SCENARIO("Testing graphs basic functionality", "[graphs]") {
+
+    GIVEN("A graph with two vertices") {
+        graphs::Graph graph;
+        graph.addVertex(0, 0);
+        graph.addVertex(1, 0);
+        WHEN("connecting the two vertices") {
+            graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
+            THEN("this should be reflected in the neighbors structure accessed by particle indices") {
+                REQUIRE(graph.vertices().size() == 2);
+                REQUIRE(graph.vertexForParticleIndex(0).particleIndex == 0);
+                REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
+                REQUIRE(graph.vertexForParticleIndex(0).neighbors().size() == 1);
+                REQUIRE(graph.vertexForParticleIndex(1).neighbors().size() == 1);
+                REQUIRE(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex == 1);
+                REQUIRE(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex == 0);
+            }
+            WHEN("removing the first particle") {
+                graph.removeParticle(0);
+                THEN("the size of the graph is 1") {
+                    REQUIRE(graph.vertices().size() == 1);
+                    REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
+                    REQUIRE(graph.vertexForParticleIndex(1).neighbors().empty());
+                }
+            }
+        }
+        WHEN("Adding a third vertex, connecting (0 -- 1), (2)") {
+            graph.addVertex(2, 0);
+
+            auto vertex_ref_0 = graph.vertices().begin();
+            auto vertex_ref_1 = ++graph.vertices().begin();
+            auto vertex_ref_2 = ++(++graph.vertices().begin());
+
+            auto it = graph.vertices().begin();
+            auto it_adv = ++graph.vertices().begin();
+            graph.addEdge(it, it_adv);
+
+            auto subGraphs = graph.connectedComponentsDestructive();
+            THEN("There should be two connected components") {
+                REQUIRE(subGraphs.size() == 2);
+            }
+            THEN("The two connected components should be (0 -- 1) and (2)") {
+                {
+                    REQUIRE(subGraphs[0].vertices().size() == 2);
+                    REQUIRE(subGraphs[0].vertices().begin() == vertex_ref_0);
+                    REQUIRE(++subGraphs[0].vertices().begin() == vertex_ref_1);
+                }
+                {
+                    REQUIRE(subGraphs[1].vertices().size() == 1);
+                    REQUIRE(subGraphs[1].vertices().begin() == vertex_ref_2);
+                }
+            }
+        }
+        WHEN("Adding two vertices and connecting (0 -- 1 -- 2 -- 3 -- 0)") {
+            graph.addVertex(2, 0);
+            graph.addVertex(3, 0);
+
+            auto a = graph.firstVertex();
+            auto b = std::next(graph.firstVertex());
+            auto c = std::next(graph.firstVertex(), 2);
+            auto d = std::next(graph.firstVertex(), 3);
+
+            graph.addEdge(a, b);
+            graph.addEdge(b, c);
+            graph.addEdge(c, d);
+            graph.addEdge(d, a);
+
+            auto n_tuples = graph.findNTuples();
+            const auto& tuples = std::get<0>(n_tuples);
+            const auto& triples = std::get<1>(n_tuples);
+            const auto& quadruples = std::get<2>(n_tuples);
+
+            THEN("expect 4 unique tuples") {
+                REQUIRE(tuples.size() == 4);
+
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(a, b)));
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(b, c)));
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(c, d)));
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(d, a)));
+            }
+            THEN("expect 4 unique triples") {
+                REQUIRE(triples.size() == 4);
+
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(a, b, c)));
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(b, c, d)));
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(c, d, a)));
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(d, a, b)));
+            }
+            THEN("expect 4 unique quadruples") {
+                REQUIRE(quadruples.size() == 4);
+
+                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(d, a, b, c)));
+                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(a, b, c, d)));
+                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(b, c, d, a)));
+                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(c, d, a, b)));
+            }
+        }
+
+        SECTION("Adding one vertex and connecting (0 -- 1 -- 2 -- 0)") {
+            graph.addVertex(2, 0);
+
+            auto a = graph.firstVertex();
+            auto b = std::next(graph.firstVertex());
+            auto c = std::next(std::next(graph.firstVertex()));
+
+            graph.addEdge(a, b);
+            graph.addEdge(b, c);
+            graph.addEdge(c, a);
+
+            auto n_tuples = graph.findNTuples();
+            const auto& tuples = std::get<0>(n_tuples);
+            const auto& triples = std::get<1>(n_tuples);
+            const auto& quadruples = std::get<2>(n_tuples);
+
+            THEN("Expect 3 unique tuples") {
+                REQUIRE(tuples.size() == 3);
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(a, b)));
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(b, c)));
+                REQUIRE(containsTupleXOR(tuples, std::make_tuple(c, a)));
+            }
+
+            THEN("Expect 3 unique triples") {
+                REQUIRE(triples.size() == 3);
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(a, b, c)));
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(b, c, a)));
+                REQUIRE(containsTupleXOR(triples, std::make_tuple(c, a, b)));
+            }
+
+            THEN("Expect 0 unique quadruples") {
+                REQUIRE(quadruples.empty());
+            }
+        }
+    }
+
+    GIVEN("A fully connected graph of size 7") {
+        auto graph = fullyConnectedGraph(7);
+        THEN("The number of vertices should be 7") {
+            REQUIRE(graph.vertices().size() == 7);
+        }
+        THEN("The number of edges should be 0.5n(n-1)") {
+            REQUIRE(graph.nEdges() == static_cast<std::size_t>(7 * (7 - 1) / 2));
+        }
+        const auto &[tuples, triples, quadruples] = graph.findNTuples();
+        THEN("The number of unique tuples should be 0.5n(n-1)") {
+            REQUIRE(tuples.size() == static_cast<std::size_t>(7 * (7 - 1) / 2));
+            for(auto i = graph.vertices().begin(); i != graph.vertices().end(); ++i) {
+                for (auto j = std::next(i); j != graph.vertices().end(); ++j) {
+                    REQUIRE(containsTupleXOR(tuples, std::make_tuple(i, j)));
+                }
+            }
+        }
+        THEN("The number of unique triples should be (n choose 3)") {
+            for(auto i = 0; i < triples.size(); ++i) {
+                const auto &[v1, v2, v3] = triples.at(i);
+                std::cout << v1->particleIndex << ", " << v2->particleIndex << ", " << v3->particleIndex << std::endl;
+            }
+            REQUIRE(triples.size() == 35);
+        }
+
+        THEN("The number of unique quadruples should be (n choose 4)") {
+            REQUIRE(quadruples.size() == 35);
+        }
+    }
 }
