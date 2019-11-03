@@ -29,60 +29,36 @@ public:
     using vertex_ptr = std::list<Vertex>::iterator;
     using vertex_cptr = std::list<Vertex>::const_iterator;
 
-    /**
-     * default constructor
-     */
-    Vertex() = default;
+    Vertex();
 
-    /**
-     * constructs a vertex to a graph
-     * @param particleIndex the particle index this vertex belongs to
-     */
-    Vertex(std::size_t particleIndex, ParticleTypeId particleType)
-            : particleIndex(particleIndex), particleType_(particleType), visited(false) {}
+    Vertex(std::size_t particleIndex, ParticleTypeId particleType);
 
-    Vertex(const Vertex &) = default;
+    Vertex(const Vertex &);
 
-    Vertex &operator=(const Vertex &) = default;
+    Vertex &operator=(const Vertex &);
 
-    Vertex(Vertex && other) noexcept = default;
+    Vertex(Vertex && other) noexcept;
 
-    Vertex &operator=(Vertex && rhs) noexcept = default;
+    Vertex &operator=(Vertex && rhs) noexcept;
 
-    /**
-     * default destructor
-     */
-    virtual ~Vertex() = default;
+    virtual ~Vertex();
 
     /**
      * particle index in the topology this vertex belongs to
      */
     std::size_t particleIndex{0};
 
-    bool operator==(const Vertex &rhs) const {
-        return particleIndex == rhs.particleIndex;
-    }
+    bool operator==(const Vertex &rhs) const;
 
-    friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
-        os << fmt::format("{}", vertex);
-        return os;
-    }
+    friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex);
 
-    bool operator!=(const Vertex &rhs) const {
-        return !(rhs == *this);
-    }
+    bool operator!=(const Vertex &rhs) const;
 
-    const std::vector<vertex_ptr> &neighbors() const {
-        return neighbors_;
-    }
+    const std::vector<vertex_ptr> &neighbors() const;
 
-    const ParticleTypeId &particleType() const {
-        return particleType_;
-    }
+    const ParticleTypeId &particleType() const;
 
-    ParticleTypeId &particleType() {
-        return particleType_;
-    }
+    ParticleTypeId &particleType();
 
 private:
     friend class graphs::Graph<graphs::Vertex>;
@@ -98,24 +74,4 @@ private:
 
 }
 
-namespace fmt {
-template <>
-struct formatter<graphs::Vertex> {
-    template <typename ParseContext>
-    constexpr auto parse(ParseContext &ctx) { return ctx.begin(); }
-
-    template <typename FormatContext>
-    auto format(const graphs::Vertex &v, FormatContext &ctx) {
-        std::stringstream ss;
-        bool first {true};
-        for (const auto neighbor : v.neighbors()) {
-            if(!first) {
-                ss << ",";
-            }
-            ss << neighbor->particleIndex;
-            first = false;
-        }
-        return format_to(ctx.out(), "Vertex[particleIndex: {}, neighbors=[{}]]", v.particleIndex, ss.str());
-    }
-};
-}
+#include "bits/Vertex_detail.h"
