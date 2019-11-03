@@ -15,7 +15,7 @@ namespace graphs {
 
 class Vertex;
 
-template<typename Vertex = graphs::Vertex>
+template<typename Vertex>
 class Graph;
 
 /**

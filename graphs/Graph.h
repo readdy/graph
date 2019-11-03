@@ -10,8 +10,6 @@
 
 #include <fmt/format.h>
 
-#include "Vertex.h"
-
 using ParticleTypeId = std::size_t;
 
 namespace graphs {
@@ -103,7 +101,7 @@ public:
      * Returns the connected components, invalidates this graph
      * @return connected components
      */
-    std::vector<Graph> connectedComponentsDestructive();
+    std::vector<Graph<Vertex>> connectedComponentsDestructive();
 
 private:
     VertexList _vertices{};

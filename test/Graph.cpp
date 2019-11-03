@@ -25,6 +25,11 @@ auto reverse(T t) {
     return reverse_impl(std::forward<T>(t), std::make_index_sequence<std::tuple_size<T>::value>());
 }
 
+std::size_t n_choose_k(std::size_t n, std::size_t k) {
+    if(k == 0 || k == n) return 1;
+    return n_choose_k(n - 1, k - 1) + n_choose_k(n - 1, k);
+}
+
 template<typename Tup>
 bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
     auto tReverse = reverse<Tup>(t);
@@ -40,8 +45,8 @@ bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
     return containsForward ^ containsBackward;
 }
 
-auto fullyConnectedGraph(std::size_t size) {
-    graphs::Graph graph;
+graphs::Graph<graphs::Vertex> fullyConnectedGraph(std::size_t size) {
+    graphs::Graph<graphs::Vertex> graph;
     for(std::size_t i = 0; i < size; ++i) {
         graph.addVertex(i, 0);
     }
@@ -53,10 +58,47 @@ auto fullyConnectedGraph(std::size_t size) {
     return graph;
 }
 
+template<std::size_t K>
+void testFullyConnected() {
+    GIVEN("A fully connected graph of size " + std::to_string(K)) {
+        auto graph = fullyConnectedGraph(K);
+        THEN("The number of vertices should be " + std::to_string(K)) {
+            REQUIRE(graph.vertices().size() == K);
+        }
+        THEN("The number of neighbors per vertex should be " + std::to_string(K - 1)) {
+            for(auto it = graph.vertices().begin(); it != graph.vertices().end(); ++it) {
+                REQUIRE(it->neighbors().size() == K - 1);
+            }
+        }
+        THEN("The number of edges should be 0.5n(n-1)") {
+            REQUIRE(graph.nEdges() == static_cast<std::size_t>(K * (K - 1) / 2));
+        }
+        const auto &[tuples, triples, quadruples] = graph.findNTuples();
+        THEN("The number of unique tuples should be 0.5n(n-1)") {
+            REQUIRE(tuples.size() == static_cast<std::size_t>(K * (K - 1) / 2));
+            for(auto i = graph.vertices().begin(); i != graph.vertices().end(); ++i) {
+                for (auto j = std::next(i); j != graph.vertices().end(); ++j) {
+                    REQUIRE(containsTupleXOR(tuples, std::make_tuple(i, j)));
+                }
+            }
+        }
+        THEN("The number of unique triples should be (n choose 3)") {
+            for(const auto &[v1, v2, v3] : triples) {
+                std::cout << v1->particleIndex << ", " << v2->particleIndex << ", " << v3->particleIndex << std::endl;
+            }
+            REQUIRE(triples.size() == n_choose_k(K, 3));
+        }
+
+        THEN("The number of unique quadruples should be (n choose 4)") {
+            REQUIRE(quadruples.size() == n_choose_k(K, 4));
+        }
+    }
+}
+
 SCENARIO("Testing graphs basic functionality", "[graphs]") {
 
     GIVEN("A graph with two vertices") {
-        graphs::Graph graph;
+        graphs::Graph<graphs::Vertex> graph;
         graph.addVertex(0, 0);
         graph.addVertex(1, 0);
         WHEN("connecting the two vertices") {
@@ -187,33 +229,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
         }
     }
 
-    GIVEN("A fully connected graph of size 7") {
-        auto graph = fullyConnectedGraph(7);
-        THEN("The number of vertices should be 7") {
-            REQUIRE(graph.vertices().size() == 7);
-        }
-        THEN("The number of edges should be 0.5n(n-1)") {
-            REQUIRE(graph.nEdges() == static_cast<std::size_t>(7 * (7 - 1) / 2));
-        }
-        const auto &[tuples, triples, quadruples] = graph.findNTuples();
-        THEN("The number of unique tuples should be 0.5n(n-1)") {
-            REQUIRE(tuples.size() == static_cast<std::size_t>(7 * (7 - 1) / 2));
-            for(auto i = graph.vertices().begin(); i != graph.vertices().end(); ++i) {
-                for (auto j = std::next(i); j != graph.vertices().end(); ++j) {
-                    REQUIRE(containsTupleXOR(tuples, std::make_tuple(i, j)));
-                }
-            }
-        }
-        THEN("The number of unique triples should be (n choose 3)") {
-            for(auto i = 0; i < triples.size(); ++i) {
-                const auto &[v1, v2, v3] = triples.at(i);
-                std::cout << v1->particleIndex << ", " << v2->particleIndex << ", " << v3->particleIndex << std::endl;
-            }
-            REQUIRE(triples.size() == 35);
-        }
+    testFullyConnected<5>();
+    // testFullyConnected<7>();
 
-        THEN("The number of unique quadruples should be (n choose 4)") {
-            REQUIRE(quadruples.size() == 35);
-        }
-    }
 }
