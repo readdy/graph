@@ -31,18 +31,18 @@ std::size_t n_choose_k(std::size_t n, std::size_t k) {
 }
 
 template<typename Tup>
-bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
+std::size_t nTupleOccurrences(const std::vector<Tup> &v, const Tup &t) {
+    std::size_t n = 0;
     auto tReverse = reverse<Tup>(t);
-    auto it = std::find_if(std::begin(v), std::end(v), [&](const Tup &other) {
-        return t == other;
-    });
-    auto itBack = std::find_if(std::begin(v), std::end(v), [&](const Tup &other) {
-        return tReverse == other;
-    });
-    auto containsForward = it != std::end(v);
-    auto containsBackward = itBack != std::end(v);
+    for(auto it = std::begin(v); it != std::end(v); ++it) {
+        if(*it == t || *it == tReverse) ++n;
+    }
+    return n;
+}
 
-    return containsForward ^ containsBackward;
+template<typename Tup>
+bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
+    return nTupleOccurrences(v, t) == 1;
 }
 
 graphs::Graph<graphs::Vertex> fullyConnectedGraph(std::size_t size) {
@@ -82,11 +82,11 @@ void testFullyConnected() {
                 }
             }
         }
-        THEN("The number of unique triples should be (n choose 3)") {
-            for(const auto &[v1, v2, v3] : triples) {
-                std::cout << v1->particleIndex << ", " << v2->particleIndex << ", " << v3->particleIndex << std::endl;
+        THEN("The number of unique triples should be 3*(n choose 3)") {
+            REQUIRE(triples.size() == 3*n_choose_k(K, 3));
+            for(const auto &triple : triples) {
+                REQUIRE(nTupleOccurrences(triples, triple) == 1);
             }
-            REQUIRE(triples.size() == n_choose_k(K, 3));
         }
 
         THEN("The number of unique quadruples should be (n choose 4)") {
@@ -230,6 +230,6 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
     }
 
     testFullyConnected<5>();
-    // testFullyConnected<7>();
+    testFullyConnected<7>();
 
 }

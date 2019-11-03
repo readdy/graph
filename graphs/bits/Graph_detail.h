@@ -305,7 +305,7 @@ inline void Graph<Vertex>::resetVertexVisitedState() const {
 template<typename Vertex>
 inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponentsDestructive() {
     _dirty = true;
-    std::vector<VertexList> subVertexLists;
+    std::vector<VertexList> subVertexLists {};
     {
         std::vector<std::vector<VertexPtr>> components;
 
@@ -351,7 +351,7 @@ inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponentsDestructive(
         }
     }
 
-    std::vector<Graph> subGraphs;
+    std::vector<Graph> subGraphs {};
     subGraphs.reserve(subVertexLists.size());
     {
         for (auto &subVertexList : subVertexLists) {
