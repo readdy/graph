@@ -102,6 +102,11 @@ void testFullyConnected() {
             // (n choose 4) different paths of length 4, 4! * (n choose 4) different order dependent paths,
             // 0.5 * 4! * (n choose 4) = 12 * (n choose 4) paths where (v1 v2 v3 v4) == (v4 v3 v2 v1).
             REQUIRE(quadruples.size() == 12*n_choose_k(K, 4));
+
+            for(const auto &quad : quadruples) {
+                CAPTURE(quad);
+                REQUIRE(nTupleOccurrences(quadruples, quad) == 1);
+            }
         }
     }
 }

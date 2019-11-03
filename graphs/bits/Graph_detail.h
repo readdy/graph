@@ -46,9 +46,14 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                         for (auto quad_it_2 : it_neigh->neighbors()) {
                             // if this other neighbor is no neighbor of v and not v itself,
                             // we got the other end of the quadruple
-                            auto no_circle =
-                                    std::find(neighbors.begin(), neighbors.end(), quad_it_2) == neighbors.end();
-                            if (quad_it_2 != it && no_circle) {
+                            //auto no_circle =
+                            //        std::find(neighbors.begin(), neighbors.end(), quad_it_2) == neighbors.end();
+                            /*if(!no_circle) {
+                                std::cerr << "got circle: " << no_circle << std::endl;
+                            } else {
+                                std::cerr << "got no circle: " << no_circle << std::endl;
+                            }*/
+                            if (quad_it_2 != it && quad_it_2 != quad_it_1 /* && no_circle*/) {
                                 auto vvvv_type = quad_it_2->particleType();
                                 auto vvvv_idx = quad_it_2->particleIndex;
                                 quadruple_callback(std::tie(quad_it_1, it, it_neigh, quad_it_2));
