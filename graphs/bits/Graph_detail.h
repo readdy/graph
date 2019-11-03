@@ -53,7 +53,8 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                             } else {
                                 std::cerr << "got no circle: " << no_circle << std::endl;
                             }*/
-                            if (quad_it_2 != it && quad_it_2 != quad_it_1 /* && no_circle*/) {
+                            if (quad_it_2 != it && quad_it_2 != quad_it_1
+                                 /* && no_circle*/) {
                                 auto vvvv_type = quad_it_2->particleType();
                                 auto vvvv_idx = quad_it_2->particleIndex;
                                 quadruple_callback(std::tie(quad_it_1, it, it_neigh, quad_it_2));

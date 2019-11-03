@@ -5,6 +5,7 @@
 #include <iostream>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 #include <catch2/catch.hpp>
 
@@ -112,6 +113,23 @@ void testFullyConnected() {
 }
 
 SCENARIO("Testing graphs basic functionality", "[graphs]") {
+
+    GIVEN("Some tuples (A, B, C, D), (D, C, B, A), (A, C, B, D)") {
+        auto t1 = std::make_tuple(0, 1, 2, 3);
+        auto t2 = std::make_tuple(3, 2, 1, 0);
+        auto t3 = std::make_tuple(0, 2, 1, 3);
+        auto vec = std::vector{t1, t2, t3};
+        THEN("the number of occurrences is 2, 2, 1") {
+            REQUIRE(nTupleOccurrences(vec, t1) == 2);
+            REQUIRE(nTupleOccurrences(vec, t2) == 2);
+            REQUIRE(nTupleOccurrences(vec, t3) == 1);
+        }
+        THEN("containsTupleXOR is false, false, true") {
+            REQUIRE_FALSE(containsTupleXOR(vec, t1));
+            REQUIRE_FALSE(containsTupleXOR(vec, t2));
+            REQUIRE(containsTupleXOR(vec, t3));
+        }
+    }
 
     GIVEN("A graph with two vertices") {
         graphs::Graph<graphs::Vertex> graph;
