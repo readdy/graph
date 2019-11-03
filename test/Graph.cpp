@@ -60,6 +60,32 @@ graphs::Graph<graphs::Vertex> fullyConnectedGraph(std::size_t size) {
 }
 
 template<std::size_t K>
+auto quadruplesFullyConnectedPrimitive() {
+    std::vector<std::tuple<std::size_t, std::size_t, std::size_t, std::size_t>> quads;
+
+    for(std::size_t i = 0; i < K; ++i){
+        for(std::size_t j = 0; j < K; ++j){
+            for(std::size_t k = 0; k < K; ++k){
+                for(std::size_t l = 0; l < K; ++l){
+                    std::array<std::size_t, 4> arr {i, j, k, l};
+                    std::sort(std::begin(arr), std::end(arr));
+                    auto pos = std::adjacent_find(std::begin(arr), std::end(arr));
+                    if( pos == std::end(arr) ) {
+                        // only true if no duplicates
+                        auto tup = std::make_tuple(i, j, k, l);
+                        if (!containsTupleXOR(quads, tup)) {
+                            quads.push_back(tup);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return quads;
+}
+
+template<std::size_t K>
 void testFullyConnected() {
     GIVEN("A fully connected graph of size " + std::to_string(K)) {
         auto graph = fullyConnectedGraph(K);
@@ -102,11 +128,16 @@ void testFullyConnected() {
             // See number of unique triplets but this time there are 12 ways of enumeration:
             // (n choose 4) different paths of length 4, 4! * (n choose 4) different order dependent paths,
             // 0.5 * 4! * (n choose 4) = 12 * (n choose 4) paths where (v1 v2 v3 v4) == (v4 v3 v2 v1).
+            auto quadsPrimitive = quadruplesFullyConnectedPrimitive<K>();
+            REQUIRE(quadsPrimitive.size() == 12*n_choose_k(K, 4));
             REQUIRE(quadruples.size() == 12*n_choose_k(K, 4));
 
             for(const auto &quad : quadruples) {
+                const auto& [v1, v2, v3, v4] = quad;
                 CAPTURE(quad);
                 REQUIRE(nTupleOccurrences(quadruples, quad) == 1);
+                REQUIRE(nTupleOccurrences(quadsPrimitive,
+                        std::make_tuple(v1->particleIndex, v2->particleIndex, v3->particleIndex, v4->particleIndex)) == 1);
             }
         }
     }
@@ -265,5 +296,6 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
 
     testFullyConnected<5>();
     testFullyConnected<7>();
+    testFullyConnected<10>();
 
 }
