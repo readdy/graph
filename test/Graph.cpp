@@ -83,14 +83,25 @@ void testFullyConnected() {
             }
         }
         THEN("The number of unique triples should be 3*(n choose 3)") {
+            // Since the graph is fully connected (n choose 3) gives the number of different paths of length 3
+            // in the graph. The number is in terms of sets, i.e., a path is defined via its vertices independent of
+            // their order. For a set of vertices {v1, v2, v3} there are three different ways of enumeration
+            //  - v1 v2 v3
+            //  - v1 v3 v2
+            //  - v2 v1 v3
+            // which give distinct potential configurations.
             REQUIRE(triples.size() == 3*n_choose_k(K, 3));
             for(const auto &triple : triples) {
+                CAPTURE(triple);
                 REQUIRE(nTupleOccurrences(triples, triple) == 1);
             }
         }
 
-        THEN("The number of unique quadruples should be (n choose 4)") {
-            REQUIRE(quadruples.size() == n_choose_k(K, 4));
+        THEN("The number of unique quadruples should be 12*(n choose 4)") {
+            // See number of unique triplets but this time there are 12 ways of enumeration:
+            // (n choose 4) different paths of length 4, 4! * (n choose 4) different order dependent paths,
+            // 0.5 * 4! * (n choose 4) = 12 * (n choose 4) paths where (v1 v2 v3 v4) == (v4 v3 v2 v1).
+            REQUIRE(quadruples.size() == 12*n_choose_k(K, 4));
         }
     }
 }
