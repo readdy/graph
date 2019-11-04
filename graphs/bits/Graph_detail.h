@@ -27,36 +27,22 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
     }
 
     for (auto it = _vertices.begin(); it != _vertices.end(); ++it) {
+        // vertex v1
         it->visited = true;
         auto v_type = it->particleType();
         auto v_idx = it->particleIndex;
         auto &neighbors = it->neighbors();
         for (auto it_neigh : neighbors) {
-            auto vv_type = it_neigh->particleType();
-            auto vv_idx = it_neigh->particleIndex;
+            // vertex v2 in N(v1)
             if (!it_neigh->visited) {
                 // got edge (v, vv), now look for N(v)\{vv} and N(vv)\(N(v) + v)
                 tuple_callback(std::tie(it, it_neigh));
                 for (auto quad_it_1 : neighbors) {
-                    // N(v)\{vv}
                     if (it_neigh != quad_it_1) {
-                        auto vvv_type = quad_it_1->particleType();
-                        auto vvv_idx = quad_it_1->particleIndex;
-                        // got one end of the quadruple
+                        // vertex v3 in N(v1)\{v2}
                         for (auto quad_it_2 : it_neigh->neighbors()) {
-                            // if this other neighbor is no neighbor of v and not v itself,
-                            // we got the other end of the quadruple
-                            //auto no_circle =
-                            //        std::find(neighbors.begin(), neighbors.end(), quad_it_2) == neighbors.end();
-                            /*if(!no_circle) {
-                                std::cerr << "got circle: " << no_circle << std::endl;
-                            } else {
-                                std::cerr << "got no circle: " << no_circle << std::endl;
-                            }*/
-                            if (quad_it_2 != it && quad_it_2 != quad_it_1
-                                 /* && no_circle*/) {
-                                auto vvvv_type = quad_it_2->particleType();
-                                auto vvvv_idx = quad_it_2->particleIndex;
+                            if (quad_it_2 != it && quad_it_2 != quad_it_1) {
+                                // vertex v4 in N(v2)\{v1, v3}
                                 quadruple_callback(std::tie(quad_it_1, it, it_neigh, quad_it_2));
                             }
                         }
@@ -65,8 +51,6 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
             }
             for (auto it_neigh2 : neighbors) {
                 if (it_neigh2 != it_neigh && it_neigh->particleIndex < it_neigh2->particleIndex) {
-                    auto vvv_type = it_neigh2->particleType();
-                    auto vvv_idx = it_neigh2->particleIndex;
                     triple_callback(std::tie(it_neigh, it, it_neigh2));
                 }
             }
