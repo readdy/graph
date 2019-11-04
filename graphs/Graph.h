@@ -10,8 +10,6 @@
 
 #include <fmt/format.h>
 
-using ParticleTypeId = std::size_t;
-
 namespace graphs {
 
 template<typename Vertex>
@@ -53,9 +51,9 @@ public:
 
     bool containsEdge(VertexPtr v1, VertexPtr v2) const;
 
-    const Vertex &vertexForParticleIndex(std::size_t particleIndex) const;
+    const Vertex &vertexForData(const typename Vertex::data_type &data) const;
 
-    void addVertex(std::size_t particleIndex, ParticleTypeId particleType);
+    void addVertex(typename Vertex::data_type data);
 
     template<auto debug = nullptr>
     void addVertexNeighbor(Vertex& v1, const VertexPtr &v2);
@@ -103,6 +101,8 @@ public:
      */
     std::vector<Graph<Vertex>> connectedComponentsDestructive();
 
+    void concatenate(Graph &other);
+
 private:
     VertexList _vertices{};
 
@@ -113,7 +113,7 @@ private:
 
     void removeNeighborsEdges(VertexPtr vertex);
 
-    VertexPtr vertexItForParticleIndex(std::size_t particleIndex);
+    VertexPtr vertexItForData(const typename Vertex::data_type &data);
 
 };
 

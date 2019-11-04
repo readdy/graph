@@ -49,7 +49,7 @@ bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
 graphs::Graph<graphs::Vertex<std::size_t>> fullyConnectedGraph(std::size_t size) {
     graphs::Graph<graphs::Vertex<std::size_t>> graph;
     for(std::size_t i = 0; i < size; ++i) {
-        graph.addVertex(i, 0);
+        graph.addVertex(i);
     }
     for(auto i = graph.vertices().begin(); i != graph.vertices().end(); ++i) {
         for(auto j = std::next(i); j != graph.vertices().end(); ++j) {
@@ -137,8 +137,7 @@ void testFullyConnected() {
                 CAPTURE(quad);
                 REQUIRE(nTupleOccurrences(quadruples, quad) == 1);
                 REQUIRE(nTupleOccurrences(quadsPrimitive,
-                        std::make_tuple(v1->particleIndex(), v2->particleIndex(),
-                                        v3->particleIndex(), v4->particleIndex())) == 1);
+                        std::make_tuple(v1->data(), v2->data(), v3->data(), v4->data())) == 1);
             }
         }
     }
@@ -165,30 +164,30 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
 
     GIVEN("A graph with two vertices") {
         graphs::Graph<graphs::Vertex<std::size_t>> graph;
-        graph.addVertex(0, 0);
-        graph.addVertex(1, 0);
+        graph.addVertex(0);
+        graph.addVertex(1);
         WHEN("connecting the two vertices") {
             graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
             THEN("this should be reflected in the neighbors structure accessed by particle indices") {
                 REQUIRE(graph.vertices().size() == 2);
-                REQUIRE(graph.vertexForParticleIndex(0).particleIndex() == 0);
-                REQUIRE(graph.vertexForParticleIndex(1).particleIndex() == 1);
-                REQUIRE(graph.vertexForParticleIndex(0).neighbors().size() == 1);
-                REQUIRE(graph.vertexForParticleIndex(1).neighbors().size() == 1);
-                REQUIRE(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex() == 1);
-                REQUIRE(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex() == 0);
+                REQUIRE(graph.vertexForData(0).data() == 0);
+                REQUIRE(graph.vertexForData(1).data() == 1);
+                REQUIRE(graph.vertexForData(0).neighbors().size() == 1);
+                REQUIRE(graph.vertexForData(1).neighbors().size() == 1);
+                REQUIRE(graph.vertexForData(0).neighbors()[0]->data() == 1);
+                REQUIRE(graph.vertexForData(1).neighbors()[0]->data() == 0);
             }
             WHEN("removing the first particle") {
                 graph.removeParticle(0);
                 THEN("the size of the graph is 1") {
                     REQUIRE(graph.vertices().size() == 1);
-                    REQUIRE(graph.vertexForParticleIndex(1).particleIndex() == 1);
-                    REQUIRE(graph.vertexForParticleIndex(1).neighbors().empty());
+                    REQUIRE(graph.vertexForData(1).data() == 1);
+                    REQUIRE(graph.vertexForData(1).neighbors().empty());
                 }
             }
         }
         WHEN("Adding a third vertex, connecting (0 -- 1), (2)") {
-            graph.addVertex(2, 0);
+            graph.addVertex(2);
 
             auto vertex_ref_0 = graph.vertices().begin();
             auto vertex_ref_1 = ++graph.vertices().begin();
@@ -215,8 +214,8 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             }
         }
         WHEN("Adding two vertices and connecting (0 -- 1 -- 2 -- 3 -- 0)") {
-            graph.addVertex(2, 0);
-            graph.addVertex(3, 0);
+            graph.addVertex(2);
+            graph.addVertex(3);
 
             auto a = graph.firstVertex();
             auto b = std::next(graph.firstVertex());
@@ -260,7 +259,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
         }
 
         SECTION("Adding one vertex and connecting (0 -- 1 -- 2 -- 0)") {
-            graph.addVertex(2, 0);
+            graph.addVertex(2);
 
             auto a = graph.firstVertex();
             auto b = std::next(graph.firstVertex());

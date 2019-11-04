@@ -8,21 +8,19 @@
 TEST_CASE("Test Vertex class", "[vertex]") {
     SECTION("With with default ctor") {
         graphs::Vertex vertex;
-        REQUIRE(vertex.particleIndex() == 0);
-        REQUIRE(vertex.particleType() == 0);
+        REQUIRE(vertex.data() == 0);
         REQUIRE(vertex.neighbors().empty());
     }
 
     SECTION("With non-default ctor") {
-        graphs::Vertex vertex2 (5, 9);
-        REQUIRE(vertex2.particleIndex() == 5);
-        REQUIRE(vertex2.particleType() == 9);
+        graphs::Vertex vertex2 (5);
+        REQUIRE(vertex2.data() == 5);
         REQUIRE(vertex2.neighbors().empty());
     }
 
     SECTION("Vertices with neighbors") {
-        std::list<graphs::Vertex<std::size_t>> vertices {
-                {0, 0}, {1, 0}, {2, 0}
+        std::list<graphs::Vertex<std::tuple<int, int>>> vertices {
+                std::make_tuple(0, 0), std::make_tuple(1, 0), std::make_tuple(2, 0)
         };
         auto &vertex1 = *vertices.begin();
         REQUIRE(vertex1.neighbors().empty());

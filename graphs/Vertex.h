@@ -13,13 +13,13 @@
 
 namespace graphs {
 
-template<typename ParticleTypeId>
+template<typename ID, typename... T>
 class Vertex;
 
 template<typename Vertex = graphs::Vertex<std::size_t>>
 class Graph;
 
-template<typename ParticleTypeId = std::size_t>
+template<typename ID, typename... T>
 class Vertex {
 public:
     /**
@@ -27,10 +27,12 @@ public:
      */
     using VertexPtr = typename std::list<Vertex>::iterator;
     using VertexCPtr = typename std::list<Vertex>::const_iterator;
+    using id_type = ID;
+    using data_type = std::tuple<T...>;
 
     Vertex();
 
-    Vertex(std::size_t particleIndex, ParticleTypeId particleType);
+    Vertex(data_type data);
 
     Vertex(const Vertex &);
 
@@ -41,13 +43,6 @@ public:
     Vertex &operator=(Vertex && rhs) noexcept;
 
     virtual ~Vertex();
-
-    /**
-     * particle index in the topology this vertex belongs to
-    */
-    std::size_t particleIndex() const;
-
-    void setParticleIndex(std::size_t particleIndex);
 
     bool operator==(const Vertex &rhs) const;
 
@@ -64,12 +59,12 @@ public:
     template<auto debug=nullptr>
     void removeNeighbor(VertexPtr neighbor);
 
-    const ParticleTypeId &particleType() const;
+    const data_type &data() const;
 
-    void setParticleType(ParticleTypeId typeId);
+    void setData(data_type data);
 
 private:
-    friend class graphs::Graph<graphs::Vertex<ParticleTypeId>>;
+    friend class graphs::Graph<graphs::Vertex<data_type>>;
 
     /**
      * the edges (i.e., pointers to neighboring vertices)
@@ -77,8 +72,7 @@ private:
     std::vector<VertexPtr> _neighbors{};
     mutable bool visited {false};
 
-    ParticleTypeId _particleType{0};
-    std::size_t _particleIndex {0};
+    data_type _data{};
 };
 
 }

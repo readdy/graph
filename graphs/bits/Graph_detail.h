@@ -102,19 +102,19 @@ inline bool Graph<Vertex>::containsEdge(VertexPtr v1, VertexPtr v2) const {
 }
 
 template<typename Vertex>
-inline const Vertex &Graph<Vertex>::vertexForParticleIndex(std::size_t particleIndex) const {
-    auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
-        return vertex.particleIndex() == particleIndex;
+inline const Vertex &Graph<Vertex>::vertexForData(const typename Vertex::data_type &data) const {
+    auto it = std::find_if(_vertices.begin(), _vertices.end(), [&data](const Vertex &vertex) {
+        return vertex.data() == data;
     });
     if (it != _vertices.end()) {
         return *it;
     }
-    throw std::invalid_argument("graph did not contain the particle index " + std::to_string(particleIndex));
+    throw std::invalid_argument(fmt::format("graph did not contain vertex with data {}", data));
 }
 
 template<typename Vertex>
-inline void Graph<Vertex>::addVertex(std::size_t particleIndex, ParticleTypeId particleType) {
-    _vertices.emplace_back(particleIndex, particleType);
+inline void Graph<Vertex>::addVertex(typename Vertex::data_type data) {
+    _vertices.emplace_back(std::move(data));
 }
 
 template<typename Vertex>
@@ -342,9 +342,9 @@ inline void Graph<Vertex>::removeNeighborsEdges(Graph::VertexPtr vertex) {
 }
 
 template<typename Vertex>
-inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForParticleIndex(std::size_t particleIndex) {
-    return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
-        return vertex.particleIndex() == particleIndex;
+inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForData(const typename Vertex::data_type &data) {
+    return std::find_if(_vertices.begin(), _vertices.end(), [&data](const Vertex &vertex) {
+        return vertex.data() == data;
     });
 }
 
