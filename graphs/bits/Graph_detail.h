@@ -29,8 +29,6 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
     for (auto it = _vertices.begin(); it != _vertices.end(); ++it) {
         // vertex v1
         it->visited = true;
-        auto v_type = it->particleType();
-        auto v_idx = it->particleIndex;
         auto &neighbors = it->neighbors();
         for (auto it_neigh : neighbors) {
             // vertex v2 in N(v1)
@@ -50,7 +48,7 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                 }
             }
             for (auto it_neigh2 : neighbors) {
-                if (it_neigh2 != it_neigh && it_neigh->particleIndex < it_neigh2->particleIndex) {
+                if (it_neigh2 != it_neigh && it_neigh->particleIndex() < it_neigh2->particleIndex()) {
                     triple_callback(std::tie(it_neigh, it, it_neigh2));
                 }
             }
@@ -106,7 +104,7 @@ inline bool Graph<Vertex>::containsEdge(VertexPtr v1, VertexPtr v2) const {
 template<typename Vertex>
 inline const Vertex &Graph<Vertex>::vertexForParticleIndex(std::size_t particleIndex) const {
     auto it = std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
-        return vertex.particleIndex == particleIndex;
+        return vertex.particleIndex() == particleIndex;
     });
     if (it != _vertices.end()) {
         return *it;
@@ -236,32 +234,16 @@ inline std::tuple<std::vector<typename Graph<Vertex>::Edge>,
 
 template<typename Vertex>
 template<auto debug>
-inline void Graph<Vertex>::addVertexNeighbor(Vertex &v1, const Graph::VertexPtr &v2) {
+inline void Graph<Vertex>::addVertexNeighbor(Vertex &v1, const VertexPtr &v2) {
     _dirty = true;
-    auto found = std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2) == v1.neighbors_.end();
-    if(found) {
-        v1.neighbors_.push_back(v2);
-    }
-    if constexpr (debug != nullptr) {
-        if(!found) {
-            (*debug)(fmt::format("tried to add an already existing edge ({} - {})",
-                                 v1.particleIndex, v2->particleIndex));
-        }
-    }
+    v1.template addNeighbor<debug>(v2);
 }
 
 template<typename Vertex>
 template<auto debug>
-inline void Graph<Vertex>::removeVertexNeighbor(Vertex &v1, const Graph::VertexPtr &v2) {
+inline void Graph<Vertex>::removeVertexNeighbor(Vertex &v1, const VertexPtr &v2) {
     _dirty = true;
-    auto it = std::find(v1.neighbors_.begin(), v1.neighbors_.end(), v2);
-    if (it != v1.neighbors_.end()) {
-        v1.neighbors_.erase(it);
-    } else {
-        if constexpr (debug != nullptr) {
-            (*debug)(fmt::format("tried to remove a non existing edge {} - {}", v1.particleIndex, v2->particleIndex));
-        }
-    }
+    v1.template removeNeighbor<debug>(v2);
 }
 
 template<typename Vertex>
@@ -362,7 +344,7 @@ inline void Graph<Vertex>::removeNeighborsEdges(Graph::VertexPtr vertex) {
 template<typename Vertex>
 inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForParticleIndex(std::size_t particleIndex) {
     return std::find_if(_vertices.begin(), _vertices.end(), [particleIndex](const Vertex &vertex) {
-        return vertex.particleIndex == particleIndex;
+        return vertex.particleIndex() == particleIndex;
     });
 }
 

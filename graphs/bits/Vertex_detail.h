@@ -11,10 +11,10 @@ namespace graphs {
 inline Vertex::Vertex() = default;
 
 inline Vertex::Vertex(std::size_t particleIndex, ParticleTypeId particleType)
-    : particleIndex(particleIndex), particleType_(particleType), visited(false) {}
+    : _particleIndex(particleIndex), _particleType(particleType), visited(false) {}
 
 inline bool Vertex::operator==(const Vertex &rhs) const {
-    return particleIndex == rhs.particleIndex;
+    return _particleIndex == rhs._particleIndex;
 }
 
 inline std::ostream &operator<<(std::ostream &os, const Vertex &vertex) {
@@ -26,16 +26,52 @@ inline bool Vertex::operator!=(const Vertex &rhs) const {
     return !(rhs == *this);
 }
 
-inline const std::vector<Vertex::vertex_ptr> &Vertex::neighbors() const {
-    return neighbors_;
+inline const std::vector<Vertex::VertexPtr> &Vertex::neighbors() const {
+    return _neighbors;
 }
 
 inline const ParticleTypeId &Vertex::particleType() const {
-    return particleType_;
+    return _particleType;
 }
 
-inline ParticleTypeId &Vertex::particleType() {
-    return particleType_;
+inline void Vertex::setParticleType(ParticleTypeId typeId) {
+    _particleType = typeId;
+}
+
+inline std::size_t Vertex::particleIndex() const {
+    return _particleIndex;
+}
+
+inline void Vertex::setParticleIndex(std::size_t particleIndex) {
+    _particleIndex = particleIndex;
+}
+
+template<auto debug>
+inline void Vertex::addNeighbor(Vertex::VertexPtr neighbor) {
+    auto newNeighbor = std::find(_neighbors.begin(), _neighbors.end(), neighbor) == _neighbors.end();
+    if(newNeighbor) {
+        _neighbors.push_back(neighbor);
+    }
+    if constexpr (debug != nullptr) {
+        if(!newNeighbor) {
+            (*debug)(fmt::format("tried to add an already existing edge ({} - {})",
+                                 _particleIndex, neighbor->_particleIndex));
+        }
+    }
+
+}
+
+template<auto debug>
+inline void Vertex::removeNeighbor(Vertex::VertexPtr neighbor) {
+    auto it = std::find(_neighbors.begin(), _neighbors.end(), neighbor);
+    if (it != _neighbors.end()) {
+        _neighbors.erase(it);
+    } else {
+        if constexpr (debug != nullptr) {
+            (*debug)(fmt::format("tried to remove a non existing edge {} - {}",
+                                 _particleIndex, neighbor->_particleIndex));
+        }
+    }
 }
 
 inline Vertex::~Vertex() = default;
@@ -64,10 +100,10 @@ struct formatter<graphs::Vertex> {
             if(!first) {
                 ss << ",";
             }
-            ss << neighbor->particleIndex;
+            ss << neighbor->particleIndex();
             first = false;
         }
-        return format_to(ctx.out(), "Vertex[particleIndex: {}, neighbors=[{}]]", v.particleIndex, ss.str());
+        return format_to(ctx.out(), "Vertex[particleIndex: {}, neighbors=[{}]]", v.particleIndex(), ss.str());
     }
 };
 }

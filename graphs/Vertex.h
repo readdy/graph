@@ -9,6 +9,8 @@
 #include <vector>
 #include <sstream>
 
+#include <fmt/format.h>
+
 using ParticleTypeId = std::size_t;
 
 namespace graphs {
@@ -26,8 +28,8 @@ public:
     /**
      * edge in the graph (i.e., pointer to neighboring vertex)
      */
-    using vertex_ptr = std::list<Vertex>::iterator;
-    using vertex_cptr = std::list<Vertex>::const_iterator;
+    using VertexPtr = std::list<Vertex>::iterator;
+    using VertexCPtr = std::list<Vertex>::const_iterator;
 
     Vertex();
 
@@ -45,8 +47,10 @@ public:
 
     /**
      * particle index in the topology this vertex belongs to
-     */
-    std::size_t particleIndex{0};
+    */
+    std::size_t particleIndex() const;
+
+    void setParticleIndex(std::size_t particleIndex);
 
     bool operator==(const Vertex &rhs) const;
 
@@ -54,11 +58,17 @@ public:
 
     bool operator!=(const Vertex &rhs) const;
 
-    const std::vector<vertex_ptr> &neighbors() const;
+    const std::vector<VertexPtr> &neighbors() const;
+
+    template<auto debug=nullptr>
+    void addNeighbor(VertexPtr neighbor);
+
+    template<auto debug=nullptr>
+    void removeNeighbor(VertexPtr neighbor);
 
     const ParticleTypeId &particleType() const;
 
-    ParticleTypeId &particleType();
+    void setParticleType(ParticleTypeId typeId);
 
 private:
     friend class graphs::Graph<graphs::Vertex>;
@@ -66,10 +76,11 @@ private:
     /**
      * the edges (i.e., pointers to neighboring vertices)
      */
-    std::vector<vertex_ptr> neighbors_{};
+    std::vector<VertexPtr> _neighbors{};
     mutable bool visited {false};
 
-    ParticleTypeId particleType_{0};
+    ParticleTypeId _particleType{0};
+    std::size_t _particleIndex {0};
 };
 
 }

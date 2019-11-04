@@ -137,7 +137,8 @@ void testFullyConnected() {
                 CAPTURE(quad);
                 REQUIRE(nTupleOccurrences(quadruples, quad) == 1);
                 REQUIRE(nTupleOccurrences(quadsPrimitive,
-                        std::make_tuple(v1->particleIndex, v2->particleIndex, v3->particleIndex, v4->particleIndex)) == 1);
+                        std::make_tuple(v1->particleIndex(), v2->particleIndex(),
+                                        v3->particleIndex(), v4->particleIndex())) == 1);
             }
         }
     }
@@ -170,18 +171,18 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
             THEN("this should be reflected in the neighbors structure accessed by particle indices") {
                 REQUIRE(graph.vertices().size() == 2);
-                REQUIRE(graph.vertexForParticleIndex(0).particleIndex == 0);
-                REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
+                REQUIRE(graph.vertexForParticleIndex(0).particleIndex() == 0);
+                REQUIRE(graph.vertexForParticleIndex(1).particleIndex() == 1);
                 REQUIRE(graph.vertexForParticleIndex(0).neighbors().size() == 1);
                 REQUIRE(graph.vertexForParticleIndex(1).neighbors().size() == 1);
-                REQUIRE(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex == 1);
-                REQUIRE(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex == 0);
+                REQUIRE(graph.vertexForParticleIndex(0).neighbors()[0]->particleIndex() == 1);
+                REQUIRE(graph.vertexForParticleIndex(1).neighbors()[0]->particleIndex() == 0);
             }
             WHEN("removing the first particle") {
                 graph.removeParticle(0);
                 THEN("the size of the graph is 1") {
                     REQUIRE(graph.vertices().size() == 1);
-                    REQUIRE(graph.vertexForParticleIndex(1).particleIndex == 1);
+                    REQUIRE(graph.vertexForParticleIndex(1).particleIndex() == 1);
                     REQUIRE(graph.vertexForParticleIndex(1).neighbors().empty());
                 }
             }
@@ -296,6 +297,6 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
 
     testFullyConnected<5>();
     testFullyConnected<7>();
-    testFullyConnected<10>();
+    testFullyConnected<8>();
 
 }
