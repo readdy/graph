@@ -51,9 +51,9 @@ public:
 
     bool containsEdge(VertexPtr v1, VertexPtr v2) const;
 
-    const Vertex &vertexForData(const typename Vertex::data_type &data) const;
+    const Vertex &vertexForId(const typename Vertex::id_type &id) const;
 
-    void addVertex(typename Vertex::data_type data);
+    void addVertex(typename Vertex::id_type id, typename Vertex::data_type data = {});
 
     template<auto debug = nullptr>
     void addVertexNeighbor(Vertex& v1, const VertexPtr &v2);
@@ -67,7 +67,7 @@ public:
     template<auto debug = nullptr>
     void addEdge(const Edge &edge);
 
-    void addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2);
+    void removeEdge(typename Vertex::id_type id1, typename Vertex::id_type id2);
 
     void removeEdge(VertexPtr v1, VertexPtr v2);
 
@@ -75,7 +75,7 @@ public:
 
     void removeVertex(VertexPtr vertex);
 
-    void removeParticle(std::size_t particleIndex);
+    void removeVertex(typename Vertex::id_type id);
 
     bool isConnected() const;
 
@@ -113,7 +113,7 @@ private:
 
     void removeNeighborsEdges(VertexPtr vertex);
 
-    VertexPtr vertexItForData(const typename Vertex::data_type &data);
+    VertexPtr vertexItForId(const typename Vertex::id_type &id);
 
 };
 

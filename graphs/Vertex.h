@@ -22,17 +22,14 @@ class Graph;
 template<typename ID, typename... T>
 class Vertex {
 public:
-    /**
-     * edge in the graph (i.e., pointer to neighboring vertex)
-     */
     using VertexPtr = typename std::list<Vertex>::iterator;
     using VertexCPtr = typename std::list<Vertex>::const_iterator;
     using id_type = ID;
     using data_type = std::tuple<T...>;
 
-    Vertex();
+    Vertex(id_type id, T&&... data);
 
-    Vertex(data_type data);
+    Vertex(id_type id, data_type data);
 
     Vertex(const Vertex &);
 
@@ -63,8 +60,12 @@ public:
 
     void setData(data_type data);
 
+    const id_type &id() const;
+
+    void setId(const id_type& id);
+
 private:
-    friend class graphs::Graph<graphs::Vertex<data_type>>;
+    friend class graphs::Graph<graphs::Vertex<ID, T...>>;
 
     /**
      * the edges (i.e., pointers to neighboring vertices)
@@ -72,7 +73,8 @@ private:
     std::vector<VertexPtr> _neighbors{};
     mutable bool visited {false};
 
-    data_type _data{};
+    id_type _id;
+    data_type _data;
 };
 
 }

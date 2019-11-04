@@ -7,14 +7,15 @@
 
 TEST_CASE("Test Vertex class", "[vertex]") {
     SECTION("With with default ctor") {
-        graphs::Vertex vertex;
-        REQUIRE(vertex.data() == 0);
+        graphs::Vertex vertex (0, 1, 2, 3);
+        REQUIRE(vertex.id() == 0);
+        REQUIRE(vertex.data() == std::make_tuple(1, 2, 3));
         REQUIRE(vertex.neighbors().empty());
     }
 
     SECTION("With non-default ctor") {
         graphs::Vertex vertex2 (5);
-        REQUIRE(vertex2.data() == 5);
+        REQUIRE(vertex2.id() == 5);
         REQUIRE(vertex2.neighbors().empty());
     }
 

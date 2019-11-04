@@ -48,7 +48,7 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                 }
             }
             for (auto it_neigh2 : neighbors) {
-                if (it_neigh2 != it_neigh && it_neigh->particleIndex() < it_neigh2->particleIndex()) {
+                if (it_neigh2 != it_neigh && it_neigh->id() < it_neigh2->id()) {
                     triple_callback(std::tie(it_neigh, it, it_neigh2));
                 }
             }
@@ -102,19 +102,19 @@ inline bool Graph<Vertex>::containsEdge(VertexPtr v1, VertexPtr v2) const {
 }
 
 template<typename Vertex>
-inline const Vertex &Graph<Vertex>::vertexForData(const typename Vertex::data_type &data) const {
-    auto it = std::find_if(_vertices.begin(), _vertices.end(), [&data](const Vertex &vertex) {
-        return vertex.data() == data;
+inline const Vertex &Graph<Vertex>::vertexForId(const typename Vertex::id_type &id) const {
+    auto it = std::find_if(_vertices.begin(), _vertices.end(), [&id](const Vertex &vertex) {
+        return vertex.id() == id;
     });
     if (it != _vertices.end()) {
         return *it;
     }
-    throw std::invalid_argument(fmt::format("graph did not contain vertex with data {}", data));
+    throw std::invalid_argument(fmt::format("graph did not contain vertex with id {}", id));
 }
 
 template<typename Vertex>
-inline void Graph<Vertex>::addVertex(typename Vertex::data_type data) {
-    _vertices.emplace_back(std::move(data));
+inline void Graph<Vertex>::addVertex(typename Vertex::id_type id, typename Vertex::data_type data) {
+    _vertices.emplace_back(id, std::move(data));
 }
 
 template<typename Vertex>
@@ -131,9 +131,9 @@ inline void Graph<Vertex>::addEdge(const Graph::Edge &edge) {
 }
 
 template<typename Vertex>
-inline void Graph<Vertex>::addEdgeBetweenParticles(std::size_t particleIndex1, std::size_t particleIndex2) {
-    auto it1 = vertexItForParticleIndex(particleIndex1);
-    auto it2 = vertexItForParticleIndex(particleIndex2);
+inline void Graph<Vertex>::removeEdge(typename Vertex::id_type id1, typename Vertex::id_type id2) {
+    auto it1 = vertexItForId(id1);
+    auto it2 = vertexItForId(id2);
     if (it1 != _vertices.end() && it2 != _vertices.end()) {
         addVertexNeighbor(*it1, it2);
         addVertexNeighbor(*it2, it1);
@@ -161,15 +161,13 @@ inline void Graph<Vertex>::removeVertex(Graph::VertexPtr vertex) {
 }
 
 template<typename Vertex>
-inline void Graph<Vertex>::removeParticle(std::size_t particleIndex) {
-    auto v = vertexItForParticleIndex(particleIndex);
+inline void Graph<Vertex>::removeVertex(typename Vertex::id_type id) {
+    auto v = vertexItForId(id);
     if (v != _vertices.end()) {
         removeNeighborsEdges(v);
         _vertices.erase(v);
     } else {
-        throw std::invalid_argument(
-                "the vertex corresponding to the particle with topology index " + std::to_string(particleIndex) +
-                " did not exist in the graph");
+        throw std::invalid_argument(fmt::format("Vertex with id {} did not exist in the graph.", id));
     }
 }
 
@@ -342,9 +340,9 @@ inline void Graph<Vertex>::removeNeighborsEdges(Graph::VertexPtr vertex) {
 }
 
 template<typename Vertex>
-inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForData(const typename Vertex::data_type &data) {
-    return std::find_if(_vertices.begin(), _vertices.end(), [&data](const Vertex &vertex) {
-        return vertex.data() == data;
+inline typename Graph<Vertex>::VertexPtr Graph<Vertex>::vertexItForId(const typename Vertex::id_type &id) {
+    return std::find_if(_vertices.begin(), _vertices.end(), [&id](const Vertex &vertex) {
+        return vertex.id() == id;
     });
 }
 

@@ -136,8 +136,7 @@ void testFullyConnected() {
                 const auto& [v1, v2, v3, v4] = quad;
                 CAPTURE(quad);
                 REQUIRE(nTupleOccurrences(quadruples, quad) == 1);
-                REQUIRE(nTupleOccurrences(quadsPrimitive,
-                        std::make_tuple(v1->data(), v2->data(), v3->data(), v4->data())) == 1);
+                REQUIRE(nTupleOccurrences(quadsPrimitive, std::make_tuple(v1->id(), v2->id(), v3->id(), v4->id())) == 1);
             }
         }
     }
@@ -170,19 +169,19 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             graph.addEdge(graph.vertices().begin(), ++graph.vertices().begin());
             THEN("this should be reflected in the neighbors structure accessed by particle indices") {
                 REQUIRE(graph.vertices().size() == 2);
-                REQUIRE(graph.vertexForData(0).data() == 0);
-                REQUIRE(graph.vertexForData(1).data() == 1);
-                REQUIRE(graph.vertexForData(0).neighbors().size() == 1);
-                REQUIRE(graph.vertexForData(1).neighbors().size() == 1);
-                REQUIRE(graph.vertexForData(0).neighbors()[0]->data() == 1);
-                REQUIRE(graph.vertexForData(1).neighbors()[0]->data() == 0);
+                REQUIRE(graph.vertexForId(0).id() == 0);
+                REQUIRE(graph.vertexForId(1).id() == 1);
+                REQUIRE(graph.vertexForId(0).neighbors().size() == 1);
+                REQUIRE(graph.vertexForId(1).neighbors().size() == 1);
+                REQUIRE(graph.vertexForId(0).neighbors()[0]->id() == 1);
+                REQUIRE(graph.vertexForId(1).neighbors()[0]->id() == 0);
             }
             WHEN("removing the first particle") {
-                graph.removeParticle(0);
+                graph.removeVertex(0);
                 THEN("the size of the graph is 1") {
                     REQUIRE(graph.vertices().size() == 1);
-                    REQUIRE(graph.vertexForData(1).data() == 1);
-                    REQUIRE(graph.vertexForData(1).neighbors().empty());
+                    REQUIRE(graph.vertexForId(1).id() == 1);
+                    REQUIRE(graph.vertexForId(1).neighbors().empty());
                 }
             }
         }
