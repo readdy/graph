@@ -21,7 +21,7 @@ TEST_CASE("Test Vertex class", "[vertex]") {
     }
 
     SECTION("Vertices with neighbors") {
-        std::list<graphs::Vertex> vertices {
+        std::list<graphs::Vertex<std::size_t>> vertices {
                 {0, 0}, {1, 0}, {2, 0}
         };
         auto &vertex1 = *vertices.begin();

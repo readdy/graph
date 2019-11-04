@@ -46,8 +46,8 @@ bool containsTupleXOR(const std::vector<Tup> &v, const Tup &t) {
     return nTupleOccurrences(v, t) == 1;
 }
 
-graphs::Graph<graphs::Vertex> fullyConnectedGraph(std::size_t size) {
-    graphs::Graph<graphs::Vertex> graph;
+graphs::Graph<graphs::Vertex<std::size_t>> fullyConnectedGraph(std::size_t size) {
+    graphs::Graph<graphs::Vertex<std::size_t>> graph;
     for(std::size_t i = 0; i < size; ++i) {
         graph.addVertex(i, 0);
     }
@@ -164,7 +164,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
     }
 
     GIVEN("A graph with two vertices") {
-        graphs::Graph<graphs::Vertex> graph;
+        graphs::Graph<graphs::Vertex<std::size_t>> graph;
         graph.addVertex(0, 0);
         graph.addVertex(1, 0);
         WHEN("connecting the two vertices") {

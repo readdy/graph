@@ -11,25 +11,22 @@
 
 #include <fmt/format.h>
 
-using ParticleTypeId = std::size_t;
-
 namespace graphs {
 
+template<typename ParticleTypeId>
 class Vertex;
 
-template<typename Vertex>
+template<typename Vertex = graphs::Vertex<std::size_t>>
 class Graph;
 
-/**
- * Struct representing a vertex in a topology-connectivity-graph
- */
+template<typename ParticleTypeId = std::size_t>
 class Vertex {
 public:
     /**
      * edge in the graph (i.e., pointer to neighboring vertex)
      */
-    using VertexPtr = std::list<Vertex>::iterator;
-    using VertexCPtr = std::list<Vertex>::const_iterator;
+    using VertexPtr = typename std::list<Vertex>::iterator;
+    using VertexCPtr = typename std::list<Vertex>::const_iterator;
 
     Vertex();
 
@@ -54,7 +51,8 @@ public:
 
     bool operator==(const Vertex &rhs) const;
 
-    friend std::ostream &operator<<(std::ostream &os, const Vertex &vertex);
+    template <typename PID>
+    friend std::ostream &operator<<(std::ostream &os, const Vertex<PID> &vertex);
 
     bool operator!=(const Vertex &rhs) const;
 
@@ -71,7 +69,7 @@ public:
     void setParticleType(ParticleTypeId typeId);
 
 private:
-    friend class graphs::Graph<graphs::Vertex>;
+    friend class graphs::Graph<graphs::Vertex<ParticleTypeId>>;
 
     /**
      * the edges (i.e., pointers to neighboring vertices)
