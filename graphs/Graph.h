@@ -83,6 +83,7 @@ public:
      */
     std::vector<Graph<Vertex>> connectedComponentsDestructive();
 
+    // todo
     void concatenate(Graph &other);
 
 private:
