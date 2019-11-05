@@ -44,27 +44,29 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
         // vertex v1
         visited.at(vertexIndex) = true;
         const auto &v1 = vertices().at(vertexIndex);
-        auto &neighbors = v1.neighbors();
-        for (auto neighborIndex : neighbors) {
-            // vertex v2 in N(v1)
-            if (!visited.at(neighborIndex)) {
-                const auto &v2 = _vertices.at(neighborIndex);
-                tuple_callback(std::tie(vertexIndex, neighborIndex));
-                for (auto quadIx1 : neighbors) {
-                    if (neighborIndex != quadIx1) {
-                        // vertex v3 in N(v1)\{v2}
-                        for (auto quadIx2 : v2.neighbors()) {
-                            if (quadIx2 != vertexIndex && quadIx2 != quadIx1) {
-                                // vertex v4 in N(v2)\{v1, v3}
-                                quadruple_callback(std::tie(quadIx1, vertexIndex, neighborIndex, quadIx2));
+        if(!v1.deactivated()) {
+            auto &neighbors = v1.neighbors();
+            for (auto neighborIndex : neighbors) {
+                // vertex v2 in N(v1)
+                if (!visited.at(neighborIndex)) {
+                    const auto &v2 = _vertices.at(neighborIndex);
+                    tuple_callback(std::tie(vertexIndex, neighborIndex));
+                    for (auto quadIx1 : neighbors) {
+                        if (neighborIndex != quadIx1) {
+                            // vertex v3 in N(v1)\{v2}
+                            for (auto quadIx2 : v2.neighbors()) {
+                                if (quadIx2 != vertexIndex && quadIx2 != quadIx1) {
+                                    // vertex v4 in N(v2)\{v1, v3}
+                                    quadruple_callback(std::tie(quadIx1, vertexIndex, neighborIndex, quadIx2));
+                                }
                             }
                         }
                     }
                 }
-            }
-            for (auto neighborIx2 : neighbors) {
-                if (neighborIx2 != neighborIndex && neighborIx2 < neighborIndex) {
-                    triple_callback(std::tie(neighborIx2, vertexIndex, neighborIndex));
+                for (auto neighborIx2 : neighbors) {
+                    if (neighborIx2 != neighborIndex && neighborIx2 < neighborIndex) {
+                        triple_callback(std::tie(neighborIx2, vertexIndex, neighborIndex));
+                    }
                 }
             }
         }
@@ -79,16 +81,6 @@ inline const typename Graph<Vertex>::VertexList &Graph<Vertex>::vertices() const
 template<typename Vertex>
 inline typename Graph<Vertex>::VertexList &Graph<Vertex>::vertices() {
     return _vertices;
-}
-
-template<typename Vertex>
-inline Vertex &Graph<Vertex>::firstVertex() {
-    return vertices().front();
-}
-
-template<typename Vertex>
-inline Vertex &Graph<Vertex>::lastVertex() {
-    return vertices().back();
 }
 
 template<typename Vertex>
@@ -205,11 +197,19 @@ inline void Graph<Vertex>::removeVertexNeighbor(Vertex &v1, VertexIndex v2) {
 
 template<typename Vertex>
 inline bool Graph<Vertex>::isConnected() const {
+    if(_vertices.empty()) return true;
+
     std::vector<char> visited (_vertices.size(), false);
 
     std::vector<VertexIndex> unvisited;
     unvisited.reserve(_vertices.size());
-    unvisited.emplace_back(0);
+    unvisited.emplace_back([this](){
+        for(std::size_t i = 0; i < _vertices.size(); ++i) {
+            if(!_vertices.at(i).deactivated()) return i;
+        }
+        throw std::logic_error("vertices is not empty but could not find an active vertex");
+    }());
+
     std::size_t nVisited = 0;
     while(!unvisited.empty()) {
         auto vertexIndex = unvisited.back();

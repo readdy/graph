@@ -43,10 +43,6 @@ public:
 
     VertexList &vertices();
 
-    Vertex &firstVertex();
-
-    Vertex &lastVertex();
-
     bool containsEdge(const Edge &edge) const;
 
     bool containsEdge(VertexIndex v1, VertexIndex v2) const;
