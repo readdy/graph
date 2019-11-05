@@ -34,7 +34,7 @@ struct can_be_ptr_deactivated<T, std::void_t<decltype(std::declval<T>()->deactiv
 };
 
 template<template<typename...> class BackingVector, typename T, typename... Rest>
-class index_persistent_vector {
+class index_persistent_container {
     static_assert(detail::can_be_deactivated<T>::value || detail::can_be_ptr_deactivated<T>::value,
                   "index_persistent_vector can only work with (ptr) element types which have a deactivate() method");
 public:
@@ -362,6 +362,6 @@ private:
 }
 
 template<typename T>
-using index_persistent_vector = detail::index_persistent_vector<std::vector, T>;
+using index_persistent_vector = detail::index_persistent_container<std::vector, T>;
 
 }

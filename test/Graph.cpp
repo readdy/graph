@@ -195,12 +195,12 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             THEN("The two connected components should be (0 -- 1) and (2)") {
                 {
                     REQUIRE(subGraphs[0].vertices().size() == 2);
-                    REQUIRE(subGraphs[0].vertices().begin() == vertex_ref_0);
-                    REQUIRE(++subGraphs[0].vertices().begin() == vertex_ref_1);
+                    REQUIRE(subGraphs[0].vertices().begin()->data() == std::make_tuple(0));
+                    REQUIRE((++subGraphs[0].vertices().begin())->data() == std::make_tuple(1));
                 }
                 {
                     REQUIRE(subGraphs[1].vertices().size() == 1);
-                    REQUIRE(subGraphs[1].vertices().begin() == vertex_ref_2);
+                    REQUIRE(subGraphs[1].vertices().begin()->data() == std::make_tuple(2));
                 }
             }
         }

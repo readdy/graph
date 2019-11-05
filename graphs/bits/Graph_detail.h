@@ -24,7 +24,11 @@ template<typename Vertex>
 inline Graph<Vertex>::Graph() = default;
 
 template<typename Vertex>
-inline Graph<Vertex>::Graph(typename Graph<Vertex>::VertexList vertexList) : _vertices(std::move(vertexList)) {}
+inline Graph<Vertex>::Graph(typename Graph<Vertex>::VertexList vertexList) : _vertices(std::move(vertexList)) {
+    findEdges([this](const auto& edge) {
+        _edges.push_back(edge);
+    });
+}
 
 template<typename Vertex>
 inline Graph<Vertex>::~Graph() = default;
@@ -227,6 +231,7 @@ inline bool Graph<Vertex>::isConnected() const {
 template<typename Vertex>
 inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponentsDestructive() {
     std::vector<VertexList> subVertexLists {};
+
     {
         std::vector<std::vector<VertexIndex>> components;
         std::vector<char> visited (_vertices.size(), false);
@@ -259,11 +264,32 @@ inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponentsDestructive(
 
         {
             // transfer vertices
-            auto it_components = components.begin();
-            auto it_subLists = subVertexLists.begin();
-            for(; it_components != components.end(); ++it_components, ++it_subLists) {
-                for(const auto& vertex_ref : *it_components) {
-                    it_subLists->splice(it_subLists->end(), _vertices, vertex_ref);
+            auto itComponents = components.begin();
+            auto itSubLists = subVertexLists.begin();
+
+            // mapping (previous vertex index) -> (new vertex index)
+            std::vector<std::vector<VertexIndex>> reverseMappings;
+            {
+                reverseMappings.reserve(components.size());
+                for(const auto &component : components) {
+                    std::vector<VertexIndex> reverseMapping;
+                    reverseMapping.resize(_vertices.size());
+                    for(std::size_t i = 0; i < component.size(); ++i) {
+                        reverseMapping[component.at(i)] = i;
+                    }
+                    reverseMappings.push_back(std::move(reverseMapping));
+                }
+            }
+
+            auto itReverseMappings = reverseMappings.begin();
+
+            for(; itComponents != components.end(); ++itComponents, ++itSubLists, ++itReverseMappings) {
+                for(std::size_t i = 0; i < (*itComponents).size(); ++i) {
+                    auto previousVertexIndex = itComponents->at(i);
+                    itSubLists->push_back(_vertices.at(previousVertexIndex));
+                    for(auto &neighborIndex : (itSubLists->end()-1)->neighbors()) {
+                        neighborIndex = itReverseMappings->at(previousVertexIndex);
+                    }
                 }
             }
         }
