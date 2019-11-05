@@ -78,13 +78,12 @@ public:
     std::tuple<std::vector<Edge>, std::vector<Path3>, std::vector<Path4>> findNTuples();
 
     /**
-     * Returns the connected components, invalidates this graph
+     * Returns the connected components in terms of a list of new graph objects
      * @return connected components
      */
-    std::vector<Graph<Vertex>> connectedComponentsDestructive();
+    std::vector<Graph<Vertex>> connectedComponents();
 
-    // todo
-    void concatenate(Graph &other);
+    void append(const Graph &other);
 
 private:
     VertexList _vertices{};

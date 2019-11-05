@@ -229,7 +229,7 @@ inline bool Graph<Vertex>::isConnected() const {
 }
 
 template<typename Vertex>
-inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponentsDestructive() {
+inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponents() {
     std::vector<VertexList> subVertexLists {};
 
     {
@@ -316,6 +316,39 @@ inline void Graph<Vertex>::removeNeighborsEdges(VertexIndex ix) {
 template<typename Vertex>
 inline std::size_t Graph<Vertex>::nEdges() const {
     return edges().size();
+}
+
+template<typename Vertex>
+inline void Graph<Vertex>::append(const Graph &other) {
+    std::vector<VertexIndex> indexMapping;
+    indexMapping.resize(other.vertices().size());
+    // insert vertices
+    {
+        VertexIndex ix{0};
+        for (const auto &v : other.vertices()) {
+            if (!v.deactivated()) {
+                auto newIndex = addVertex(v.data());
+                indexMapping.at(ix) = newIndex;
+            }
+            ++ix;
+        }
+    }
+    // insert edges
+    {
+        VertexIndex ix{0};
+        for(const auto &v : other.vertices()) {
+            if(!v.deactivated()) {
+                auto newIndex = indexMapping.at(ix);
+                for(auto neighborIndex : v.neighbors()) {
+                    // only add once since neighbors are bidirectional
+                    if(ix < neighborIndex) {
+                        addEdge(newIndex, indexMapping.at(neighborIndex));
+                    }
+                }
+            }
+            ++ix;
+        }
+    }
 }
 
 }

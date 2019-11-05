@@ -188,7 +188,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
 
             graph.addEdge(0, 1);
 
-            auto subGraphs = graph.connectedComponentsDestructive();
+            auto subGraphs = graph.connectedComponents();
             THEN("There should be two connected components") {
                 REQUIRE(subGraphs.size() == 2);
             }
