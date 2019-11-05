@@ -10,18 +10,20 @@
 
 #include <fmt/format.h>
 
+#include "index_persistent_vector.h"
+
 namespace graphs {
 
 template<typename Vertex>
 class Graph {
 public:
+    using VertexList = graphs::index_persistent_vector<Vertex>;
+    using VertexIndex = typename VertexList::size_type;
 
-    using VertexList = std::list<Vertex>;
-    using VertexPtr = typename VertexList::iterator;
-
-    using Edge = std::tuple<VertexPtr, VertexPtr>;
-    using Path2 = std::tuple<VertexPtr, VertexPtr, VertexPtr>;
-    using Path3 = std::tuple<VertexPtr, VertexPtr, VertexPtr, VertexPtr>;
+    using Edge = std::tuple<VertexIndex, VertexIndex>;
+    using Path2 = Edge;
+    using Path3 = std::tuple<VertexIndex, VertexIndex, VertexIndex>;
+    using Path4 = std::tuple<VertexIndex, VertexIndex, VertexIndex, VertexIndex>;
 
     Graph();
 
@@ -41,47 +43,31 @@ public:
 
     VertexList &vertices();
 
-    VertexPtr firstVertex();
+    Vertex &firstVertex();
 
-    VertexPtr lastVertex();
-
-    VertexPtr toRef(const Vertex &v);
+    Vertex &lastVertex();
 
     bool containsEdge(const Edge &edge) const;
 
-    bool containsEdge(VertexPtr v1, VertexPtr v2) const;
+    bool containsEdge(VertexIndex v1, VertexIndex v2) const;
 
-    const Vertex &vertexForId(const typename Vertex::id_type &id) const;
-
-    void addVertex(typename Vertex::id_type id, typename Vertex::data_type data = {});
+    VertexIndex addVertex(typename Vertex::data_type data = {});
 
     template<auto debug = nullptr>
-    void addVertexNeighbor(Vertex& v1, const VertexPtr &v2);
-
-    template<auto debug = nullptr>
-    void removeVertexNeighbor(Vertex& v1, const VertexPtr &v2);
-
-    template<auto debug = nullptr>
-    void addEdge(VertexPtr v1, VertexPtr v2);
+    void addEdge(VertexIndex ix1, VertexIndex ix2);
 
     template<auto debug = nullptr>
     void addEdge(const Edge &edge);
 
-    void removeEdge(typename Vertex::id_type id1, typename Vertex::id_type id2);
-
-    void removeEdge(VertexPtr v1, VertexPtr v2);
+    void removeEdge(VertexIndex ix1, VertexIndex ix2);
 
     void removeEdge(const Edge &edge);
 
-    void removeVertex(VertexPtr vertex);
-
-    void removeVertex(typename Vertex::id_type id);
+    void removeVertex(VertexIndex ix);
 
     bool isConnected() const;
 
     const std::vector<Edge> &edges() const;
-
-    bool hasEdge(const Edge &edge) const;
 
     std::size_t nEdges() const;
 
@@ -93,7 +79,7 @@ public:
                      const TripleCallback &triple_callback,
                      const QuadrupleCallback &quadruple_callback);
 
-    std::tuple<std::vector<Edge>, std::vector<Path2>, std::vector<Path3>> findNTuples();
+    std::tuple<std::vector<Edge>, std::vector<Path3>, std::vector<Path4>> findNTuples();
 
     /**
      * Returns the connected components, invalidates this graph
@@ -105,15 +91,27 @@ public:
 
 private:
     VertexList _vertices{};
+    std::vector<Edge> _edges {};
 
-    mutable bool _dirty {true};
-    mutable std::vector<Edge> _edges;
+    void removeNeighborsEdges(VertexIndex ix);
 
-    void resetVertexVisitedState() const;
+    /**
+     * this has always to be called for both v1 and v2 (symmetric neighborship)
+     * @tparam debug
+     * @param v1
+     * @param v2
+     */
+    template<auto debug = nullptr>
+    void addVertexNeighbor(Vertex& v1, VertexIndex v2);
 
-    void removeNeighborsEdges(VertexPtr vertex);
-
-    VertexPtr vertexItForId(const typename Vertex::id_type &id);
+    /**
+     * this has always to be called for both v1 and v2 (symmetric neighborship)
+     * @tparam debug
+     * @param v1
+     * @param v2
+     */
+    template<auto debug = nullptr>
+    void removeVertexNeighbor(Vertex& v1, VertexIndex v2);
 
 };
 
