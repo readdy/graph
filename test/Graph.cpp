@@ -327,6 +327,30 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                 }
             }
 
+            AND_WHEN("Removing a second vertex from g1") {
+                g1.removeVertex(2);
+                THEN("The graph is a fully connected graph with 3 vertices") {
+                    REQUIRE(g1.vertices().size() == 3);
+                    REQUIRE(g1.nEdges() == g2.nEdges() - 3);
+                }
+
+                AND_WHEN("Removing a third vertex from g1") {
+                    g1.removeVertex(1);
+                    THEN("The graph is a fully connected graph with 2 vertices") {
+                        REQUIRE(g1.vertices().size() == 2);
+                        REQUIRE(g1.nEdges() == g2.nEdges() - 3 - 2);
+                        for(auto [i1, i2] : g1.edges()) {
+                            const auto &v1 = g1.vertices().at(i1);
+                            const auto &v2 = g1.vertices().at(i2);
+                            REQUIRE(!v1.deactivated());
+                            REQUIRE(!v2.deactivated());
+                            REQUIRE(std::find(v1.neighbors().begin(), v1.neighbors().end(), i2) != v1.neighbors().end());
+                            REQUIRE(std::find(v2.neighbors().begin(), v2.neighbors().end(), i1) != v2.neighbors().end());
+                        }
+                    }
+                }
+            }
+
             AND_WHEN("Appending g2") {
                 g1.append(g2);
                 THEN("There are two connected components, fully connected graphs with 4 vertices each") {
