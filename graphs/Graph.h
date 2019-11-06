@@ -31,9 +31,9 @@ public:
 
     virtual ~Graph();
 
-    Graph(const Graph &) = delete;
+    Graph(const Graph &) = default;
 
-    Graph &operator=(const Graph &) = delete;
+    Graph &operator=(const Graph &) = default;
 
     Graph(Graph &&) = default;
 

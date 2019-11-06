@@ -284,4 +284,37 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
     testFullyConnected<7>();
     testFullyConnected<8>();
 
+    GIVEN("A fully connected graph g1 of size 5 and a fully connected graph g2 of size 4") {
+        auto g1 = fullyConnectedGraph(5);
+        auto g1Copy = g1;
+        auto g2 = fullyConnectedGraph(4);
+
+        WHEN("Appending g2 to g1") {
+            g1.append(g2);
+            THEN("The number of vertices in g1 is 5+4") {
+                REQUIRE(g1.vertices().size() == 9);
+            }
+            THEN("The number of edges is the sum of the number of edges in g1 and g2") {
+                REQUIRE(g1.nEdges() == g1Copy.nEdges() + g2.nEdges());
+            }
+            AND_WHEN("taking the connected components of the joint graph") {
+                auto components = g1.connectedComponents();
+                THEN("we get back the original g1 and g2") {
+                    REQUIRE(components.size() == 2);
+                    REQUIRE((components[0].vertices().size() == 5 ^ components[0].vertices().size() == 4) == true);
+                    REQUIRE((components[1].vertices().size() == 5 ^ components[1].vertices().size() == 4) == true);
+                    if(components[0].vertices().size() == 5) {
+                        // components[0] is g1
+                        REQUIRE(components[0].nEdges() == g1Copy.nEdges());
+                        REQUIRE(components[1].nEdges() == g2.nEdges());
+                    } else {
+                        // components[0] is g2
+                        REQUIRE(components[0].nEdges() == g2.nEdges());
+                        REQUIRE(components[1].nEdges() == g1Copy.nEdges());
+                    }
+                }
+            }
+        }
+    }
+
 }

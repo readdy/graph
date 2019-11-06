@@ -288,7 +288,7 @@ inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponents() {
                     auto previousVertexIndex = itComponents->at(i);
                     itSubLists->push_back(_vertices.at(previousVertexIndex));
                     for(auto &neighborIndex : (itSubLists->end()-1)->neighbors()) {
-                        neighborIndex = itReverseMappings->at(previousVertexIndex);
+                        neighborIndex = itReverseMappings->at(neighborIndex);
                     }
                 }
             }
