@@ -315,6 +315,56 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                 }
             }
         }
+        WHEN("Removing a vertex from graph g1") {
+            g1.removeVertex(3);
+            THEN("The graph is a fully connected graph with 4 vertices") {
+                REQUIRE(g1.vertices().size() == 4);
+                REQUIRE(g1.nEdges() == g2.nEdges());
+                for(const auto&[v1, v2] : g1.edges()) {
+                    REQUIRE(!g1.vertices().at(v1).deactivated());
+                    REQUIRE(!g1.vertices().at(v2).deactivated());
+                    REQUIRE(v1 != v2);
+                }
+            }
+
+            AND_WHEN("Appending g2") {
+                g1.append(g2);
+                THEN("There are two connected components, fully connected graphs with 4 vertices each") {
+                    REQUIRE(g1.nEdges() == 2*g2.nEdges());
+                    auto components = g1.connectedComponents();
+                    REQUIRE(components.size() == 2);
+                    REQUIRE(components[0].vertices().size() == 4);
+                    REQUIRE(components[1].vertices().size() == 4);
+                    REQUIRE(components[0].nEdges() == g2.nEdges());
+                    REQUIRE(components[1].nEdges() == g2.nEdges());
+
+                    AND_THEN("The edges list should be consistent with the vertex neighbors") {
+                        for(const auto &component : components) {
+                            std::size_t nActive = 0;
+                            for(std::size_t i = 0; i < component.vertices().size(); ++i) {
+                                if(!component.vertices().at(i).deactivated()) {
+
+                                    for(auto neighborIndex : component.vertices().at(i).neighbors()) {
+                                        REQUIRE(!component.vertices().at(neighborIndex).deactivated());
+                                        auto it = std::find_if(std::begin(component.edges()),
+                                                std::end(component.edges()), [i, neighborIndex](const auto& edge) {
+                                                    auto [i1, i2] = edge;
+                                                    return (i1 == i && i2 == neighborIndex) ||
+                                                        (i1 == neighborIndex && i2 == i);
+                                        });
+                                        REQUIRE(it != component.edges().end());
+                                    }
+
+                                    ++nActive;
+                                }
+                            }
+                            REQUIRE(nActive == 4);
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
 }

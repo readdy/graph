@@ -1,22 +1,12 @@
-/**
- * This file contains the index_persistent_vector, a vector structure together with a stack of 'blanks'. Removal of
- * elements will result in a push back onto the stack of their respective indices, rendering them 'blank'. This handling
- * potentially increases the memory requirements but avoids the shift of access indices.
- *
- * @file index_persistent_vector.h
- * @brief Definitions for the index_persistent_vector
- * @author clonker
- * @date 09.06.17
- * @copyright BSD-3
- */
+//
+// Created by mho on 11/6/19.
+//
 
 #pragma once
 
 #include <vector>
 #include <stack>
 #include <algorithm>
-
-namespace graphs {
 
 namespace detail {
 template<typename T, typename = void>
@@ -34,9 +24,9 @@ struct can_be_ptr_deactivated<T, std::void_t<decltype(std::declval<T>()->deactiv
 };
 
 template<template<typename...> class BackingVector, typename T, typename... Rest>
-class index_persistent_container {
+class IndexPersistentContainer {
     static_assert(detail::can_be_deactivated<T>::value || detail::can_be_ptr_deactivated<T>::value,
-                  "index_persistent_vector can only work with (ptr) element types which have a deactivate() method");
+                  "IndexPersistentVector can only work with (ptr) element types which have a deactivate() method");
 public:
     /**
      * the size type of this, inherited from the backing vector
@@ -358,10 +348,5 @@ private:
     BlanksList _blanks;
     BackingVector<T, Rest...> _backingVector;
 };
-
-}
-
-template<typename T>
-using index_persistent_vector = detail::index_persistent_container<std::vector, T>;
 
 }

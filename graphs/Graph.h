@@ -10,14 +10,14 @@
 
 #include <fmt/format.h>
 
-#include "index_persistent_vector.h"
+#include "IndexPersistentVector.h"
 
 namespace graphs {
 
 template<typename Vertex>
 class Graph {
 public:
-    using VertexList = graphs::index_persistent_vector<Vertex>;
+    using VertexList = graphs::IndexPersistentVector<Vertex>;
     using VertexIndex = typename VertexList::size_type;
 
     using Edge = std::tuple<VertexIndex, VertexIndex>;
