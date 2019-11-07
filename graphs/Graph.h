@@ -71,9 +71,9 @@ public:
     void findEdges(const TupleCallback &edgeCallback) const;
 
     template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
-    void findNTuples(const TupleCallback &tuple_callback,
-                     const TripleCallback &triple_callback,
-                     const QuadrupleCallback &quadruple_callback);
+    void findNTuples(const TupleCallback &pairCallback,
+                     const TripleCallback &tripleCallback,
+                     const QuadrupleCallback &quadrupleCallback);
 
     std::tuple<std::vector<Edge>, std::vector<Path3>, std::vector<Path4>> findNTuples();
 

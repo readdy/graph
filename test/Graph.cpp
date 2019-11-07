@@ -99,12 +99,12 @@ void testFullyConnected() {
         THEN("The number of edges should be 0.5n(n-1)") {
             REQUIRE(graph.nEdges() == static_cast<std::size_t>(K * (K - 1) / 2));
         }
-        const auto &[tuples, triples, quadruples] = graph.findNTuples();
-        THEN("The number of unique tuples should be 0.5n(n-1)") {
-            REQUIRE(tuples.size() == static_cast<std::size_t>(K * (K - 1) / 2));
+        const auto &[pairs, triples, quadruples] = graph.findNTuples();
+        THEN("The number of unique pairs should be 0.5n(n-1)") {
+            REQUIRE(pairs.size() == static_cast<std::size_t>(K * (K - 1) / 2));
             for(std::size_t i = 0; i < graph.vertices().size(); ++i) {
                 for (std::size_t j = i+1; j < graph.vertices().size(); ++j) {
-                    REQUIRE(containsTupleXOR(tuples, std::make_tuple(i, j)));
+                    REQUIRE(containsTupleXOR(pairs, std::make_tuple(i, j)));
                 }
             }
         }
@@ -167,6 +167,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
         WHEN("connecting the two vertices") {
             graph.addEdge(0, 1);
             THEN("this should be reflected in the neighbors structure accessed by particle indices") {
+                REQUIRE(graph.isConnected());
                 REQUIRE(graph.vertices().size() == 2);
                 REQUIRE(graph.vertices().at(0).neighbors().size() == 1);
                 REQUIRE(graph.vertices().at(1).neighbors().size() == 1);
@@ -187,6 +188,8 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             graph.addVertex(2);
 
             graph.addEdge(0, 1);
+
+            REQUIRE_FALSE(graph.isConnected());
 
             auto subGraphs = graph.connectedComponents();
             THEN("There should be two connected components") {
@@ -212,6 +215,8 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             graph.addEdge(1, 2);
             graph.addEdge(2, 3);
             graph.addEdge(3, 0);
+
+            REQUIRE(graph.isConnected());
 
             auto n_tuples = graph.findNTuples();
             const auto& tuples = std::get<0>(n_tuples);
@@ -244,7 +249,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             }
         }
 
-        SECTION("Adding one vertex and connecting (0 -- 1 -- 2 -- 0)") {
+        WHEN("Adding one vertex and connecting (0 -- 1 -- 2 -- 0)") {
             graph.addVertex(2);
 
             auto a = 0;
@@ -256,15 +261,17 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             graph.addEdge(c, a);
 
             auto n_tuples = graph.findNTuples();
-            const auto& tuples = std::get<0>(n_tuples);
+            const auto& pairs = std::get<0>(n_tuples);
             const auto& triples = std::get<1>(n_tuples);
             const auto& quadruples = std::get<2>(n_tuples);
 
-            THEN("Expect 3 unique tuples") {
-                REQUIRE(tuples.size() == 3);
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(a, b)));
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(b, c)));
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(c, a)));
+            REQUIRE(graph.isConnected());
+
+            THEN("Expect 3 unique pairs") {
+                REQUIRE(pairs.size() == 3);
+                REQUIRE(containsTupleXOR(pairs, std::make_tuple(a, b)));
+                REQUIRE(containsTupleXOR(pairs, std::make_tuple(b, c)));
+                REQUIRE(containsTupleXOR(pairs, std::make_tuple(c, a)));
             }
 
             THEN("Expect 3 unique triples") {
@@ -289,8 +296,18 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
         auto g1Copy = g1;
         auto g2 = fullyConnectedGraph(4);
 
+        THEN("All graphs are connected") {
+            REQUIRE(g1.isConnected());
+            REQUIRE(g1Copy.isConnected());
+            REQUIRE(g2.isConnected());
+        }
+
         WHEN("Appending g2 to g1") {
             g1.append(g2);
+            THEN("g1 becomes disconnected, while g2 is still connected") {
+                REQUIRE_FALSE(g1.isConnected());
+                REQUIRE(g2.isConnected());
+            }
             THEN("The number of vertices in g1 is 5+4") {
                 REQUIRE(g1.vertices().size() == 9);
             }
@@ -388,7 +405,5 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                 }
             }
         }
-
     }
-
 }
