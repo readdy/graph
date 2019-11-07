@@ -34,10 +34,10 @@ template<typename Vertex>
 inline Graph<Vertex>::~Graph() = default;
 
 template<typename Vertex>
-template<typename TupleCallback, typename TripleCallback, typename QuadrupleCallback>
-inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
-                                       const TripleCallback &triple_callback,
-                                       const QuadrupleCallback &quadruple_callback) {
+template<typename PairCallback, typename TripleCallback, typename QuadrupleCallback>
+inline void Graph<Vertex>::findNTuples(const PairCallback &pairCallback,
+                                       const TripleCallback &tripleCallback,
+                                       const QuadrupleCallback &quadrupleCallback) {
     std::vector<char> visited (_vertices.size(), false);
 
     for (auto vertexIndex = 0; vertexIndex < _vertices.size(); ++vertexIndex) {
@@ -50,14 +50,14 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                 // vertex v2 in N(v1)
                 if (!visited.at(neighborIndex)) {
                     const auto &v2 = _vertices.at(neighborIndex);
-                    tuple_callback(std::tie(vertexIndex, neighborIndex));
+                    pairCallback(std::tie(vertexIndex, neighborIndex));
                     for (auto quadIx1 : neighbors) {
                         if (neighborIndex != quadIx1) {
                             // vertex v3 in N(v1)\{v2}
                             for (auto quadIx2 : v2.neighbors()) {
                                 if (quadIx2 != vertexIndex && quadIx2 != quadIx1) {
                                     // vertex v4 in N(v2)\{v1, v3}
-                                    quadruple_callback(std::tie(quadIx1, vertexIndex, neighborIndex, quadIx2));
+                                    quadrupleCallback(std::tie(quadIx1, vertexIndex, neighborIndex, quadIx2));
                                 }
                             }
                         }
@@ -65,7 +65,7 @@ inline void Graph<Vertex>::findNTuples(const TupleCallback &tuple_callback,
                 }
                 for (auto neighborIx2 : neighbors) {
                     if (neighborIx2 != neighborIndex && neighborIx2 < neighborIndex) {
-                        triple_callback(std::tie(neighborIx2, vertexIndex, neighborIndex));
+                        tripleCallback(std::tie(neighborIx2, vertexIndex, neighborIndex));
                     }
                 }
             }
@@ -156,8 +156,8 @@ inline const std::vector<typename Graph<Vertex>::Edge> &Graph<Vertex>::edges() c
 }
 
 template<typename Vertex>
-template<typename TupleCallback>
-inline void Graph<Vertex>::findEdges(const TupleCallback &edgeCallback) const {
+template<typename PairCallback>
+inline void Graph<Vertex>::findEdges(const PairCallback &edgeCallback) const {
     for(std::size_t i = 0; i < vertices().size(); ++i) {
         for(VertexIndex neighbor : vertices().at(i).neighbors()) {
             if(neighbor < i) {
@@ -173,12 +173,12 @@ inline std::tuple<std::vector<typename Graph<Vertex>::Edge>,
                   std::vector<typename Graph<Vertex>::Path3>,
                   std::vector<typename Graph<Vertex>::Path4>> Graph<Vertex>::findNTuples() {
     auto tuple = std::make_tuple(std::vector<Edge>(), std::vector<Path3>(), std::vector<Path4>());
-    findNTuples([&](const Edge &tup) {
-        std::get<0>(tuple).push_back(tup);
-    }, [&](const Path3 &path2) {
-        std::get<1>(tuple).push_back(path2);
-    }, [&](const Path4 &path3) {
-        std::get<2>(tuple).push_back(path3);
+    findNTuples([&](const Edge &edge) {
+        std::get<0>(tuple).push_back(edge);
+    }, [&](const Path3 &path3) {
+        std::get<1>(tuple).push_back(path3);
+    }, [&](const Path4 &path4) {
+        std::get<2>(tuple).push_back(path4);
     });
     return tuple;
 }
