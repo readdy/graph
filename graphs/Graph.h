@@ -83,7 +83,23 @@ public:
      */
     std::vector<Graph<Vertex>> connectedComponents();
 
-    void append(const Graph &other);
+    /**
+     * Appends the graph `other` to this graph. No edge is introduced, this graph will have at least two connected
+     * components afterwards. Returns an index mapping for the `other` graph which (for the active vertices) contains
+     * the index of the vertex in this graph, i.e., `newIndex = mapping[oldIndex]`.
+     * @param other the other graph
+     * @return index mapping
+     */
+    std::vector<VertexIndex> append(const Graph &other);
+
+    /**
+     * Appends other graph to this one and introduces an edge connecting the two.
+     * @param other other graph
+     * @param edgeIndexThis index pointing to a live vertex in this graph
+     * @param edgeIndexOther index pointing to a live vertex in the other graph
+     * @return index mapping
+     */
+    std::vector<VertexIndex> append(const Graph &other, VertexIndex edgeIndexThis, VertexIndex edgeIndexOther);
 
 private:
     VertexList _vertices{};

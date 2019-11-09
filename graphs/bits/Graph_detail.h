@@ -319,7 +319,7 @@ inline std::size_t Graph<Vertex>::nEdges() const {
 }
 
 template<typename Vertex>
-inline void Graph<Vertex>::append(const Graph &other) {
+inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(const Graph &other) {
     std::vector<VertexIndex> indexMapping;
     indexMapping.resize(other.vertices().size());
     // insert vertices
@@ -349,6 +349,16 @@ inline void Graph<Vertex>::append(const Graph &other) {
             ++ix;
         }
     }
+    return std::move(indexMapping);
+}
+
+template<typename Vertex>
+inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(const Graph<Vertex> &other,
+                                                                              VertexIndex edgeIndexThis,
+                                                                              VertexIndex edgeIndexOther) {
+    auto mapping = append(other);
+    addEdge(edgeIndexThis, mapping.at(edgeIndexOther));
+    return std::move(mapping);
 }
 
 }

@@ -366,6 +366,34 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                         }
                     }
                 }
+
+                AND_WHEN("Appending g2 to g2 forming an edge between 0 and 3") {
+                    auto mapping = g1.append(g2, 0, 3);
+                    THEN("the resulting graph is connected") {
+                        REQUIRE(g1.isConnected());
+                    }
+                    AND_THEN("the graph has the edge [0, mapping(3)]") {
+                        g1.containsEdge(0, mapping.at(3));
+                    }
+                    AND_WHEN("Removing the edge [0, mapping(3)]") {
+                        g1.removeEdge(0, mapping.at(3));
+                        THEN("There are two connected components") {
+                            REQUIRE(!g1.isConnected());
+                            REQUIRE(g1.connectedComponents().size() == 2);
+                        }
+                        AND_THEN("One component is fully connected with 3 vertices, one with 4 vertices") {
+                            auto components = g1.connectedComponents();
+                            const auto &gg1 = components.at(0).vertices().size() == 3 ? components.at(0)
+                                    : components.at(1);
+                            const auto &gg2 = components.at(0).vertices().size() == 3 ? components.at(1)
+                                    : components.at(0);
+                            REQUIRE(gg1.vertices().size() == 3);
+                            REQUIRE(gg1.nEdges() == 3*n_choose_k(3, 3));
+                            REQUIRE(gg2.vertices().size() == 4);
+                            REQUIRE(gg2.nEdges() == g2.nEdges());
+                        }
+                    }
+                }
             }
 
             AND_WHEN("Appending g2") {
