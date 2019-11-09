@@ -388,7 +388,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                             const auto &gg2 = components.at(0).vertices().size() == 3 ? components.at(1)
                                     : components.at(0);
                             REQUIRE(gg1.vertices().size() == 3);
-                            REQUIRE(gg1.nEdges() == 3*n_choose_k(3, 3));
+                            REQUIRE(gg1.nEdges() == static_cast<std::size_t>(3 * (3 - 1) / 2));
                             REQUIRE(gg2.vertices().size() == 4);
                             REQUIRE(gg2.nEdges() == g2.nEdges());
                         }
