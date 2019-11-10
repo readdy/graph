@@ -55,6 +55,14 @@ public:
 
     bool deactivated() const;
 
+    auto operator->() {
+        return &std::get<0>(_data);
+    }
+
+    auto operator->() const {
+        return &std::get<0>(_data);
+    }
+
 private:
     NeighborList _neighbors{};
     data_type _data;

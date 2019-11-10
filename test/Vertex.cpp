@@ -17,6 +17,19 @@ TEST_CASE("Test Vertex class", "[vertex]") {
         REQUIRE(vertex2.neighbors().empty());
     }
 
+    SECTION("Vertex with struct") {
+        struct A {
+            int x;
+        };
+        A a {
+            .x = 20
+        };
+        graphs::Vertex v (a);
+        REQUIRE(v->x == 20);
+        v->x = 10;
+        REQUIRE(v->x == 10);
+    }
+
     SECTION("Vertices with neighbors") {
         graphs::Vertex<std::size_t> vertex (5);
         REQUIRE(vertex.neighbors().empty());
