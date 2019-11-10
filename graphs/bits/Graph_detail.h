@@ -366,4 +366,35 @@ inline typename Graph<Vertex>::VertexList::size_type Graph<Vertex>::nVertices() 
     return _vertices.size();
 }
 
+template<typename Vertex>
+inline std::string Graph<Vertex>::gexf() const {
+    std::ostringstream ss;
+    ss << R"(<?xml version="1.0" encoding="UTF-8"?>)";
+    ss << R"(<gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">)";
+    ss << R"(<graph mode="static" defaultedgetype="undirected">)";
+    {
+        ss << "<nodes>";
+        std::size_t id = 0;
+        for (const auto &v : _vertices) {
+            if(!v.deactivated()) {
+                ss << fmt::format(R"(<node id="{}" />)", id);
+            }
+            ++id;
+        }
+        ss << "</nodes>";
+    }
+    {
+        ss << "<edges>";
+        std::size_t id = 0;
+        for(auto [i1, i2] : _edges) {
+            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1, i2);
+            ++id;
+        }
+        ss << "</edges>";
+    }
+    ss << "</graph>";
+    ss << "</gexf>";
+    return ss.str();
+}
+
 }

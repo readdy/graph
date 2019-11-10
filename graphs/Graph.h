@@ -7,6 +7,7 @@
 #include <list>
 #include <algorithm>
 #include <vector>
+#include <sstream>
 
 #include <fmt/format.h>
 
@@ -102,6 +103,8 @@ public:
      * @return index mapping
      */
     std::vector<VertexIndex> append(const Graph &other, VertexIndex edgeIndexThis, VertexIndex edgeIndexOther);
+
+    std::string gexf() const;
 
 private:
     VertexList _vertices{};
