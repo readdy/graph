@@ -361,4 +361,9 @@ inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(co
     return std::move(mapping);
 }
 
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::size_type Graph<Vertex>::nVertices() const {
+    return _vertices.size();
+}
+
 }

@@ -43,6 +43,8 @@ public:
 
     VertexList &vertices();
 
+    typename VertexList::size_type nVertices() const;
+
     bool containsEdge(const Edge &edge) const;
 
     bool containsEdge(VertexIndex v1, VertexIndex v2) const;
