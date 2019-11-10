@@ -47,7 +47,7 @@ public:
     template<auto debug=nullptr>
     void removeNeighbor(size_type neighbor);
 
-    const data_type &data() const;
+    const auto &data() const;
 
     void setData(data_type data);
 

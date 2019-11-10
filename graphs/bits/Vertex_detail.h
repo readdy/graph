@@ -31,8 +31,12 @@ inline typename Vertex<T...>::NeighborList &Vertex<T...>::neighbors() {
 }
 
 template<typename... T>
-inline const typename Vertex<T...>::data_type &Vertex<T...>::data() const {
-    return _data;
+inline const auto &Vertex<T...>::data() const {
+    if constexpr (std::tuple_size_v<data_type> == 1) {
+        return std::get<0>(_data);
+    } else {
+        return _data;
+    }
 }
 
 template<typename... T>

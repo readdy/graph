@@ -8,7 +8,7 @@
 #include <stack>
 #include <algorithm>
 
-namespace detail {
+namespace graphs::detail {
 template<typename T, typename = void>
 struct can_be_deactivated : std::false_type {
 };

@@ -179,7 +179,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                 THEN("the size of the graph is 1") {
                     REQUIRE(graph.vertices().size() == 1);
                     REQUIRE(graph.vertices().at(1).neighbors().empty());
-                    REQUIRE(graph.vertices().at(1).data() == std::make_tuple(1));
+                    REQUIRE(graph.vertices().at(1).data() == 1);
                     REQUIRE(graph.nEdges() == 0);
                 }
             }
@@ -198,12 +198,12 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             THEN("The two connected components should be (0 -- 1) and (2)") {
                 {
                     REQUIRE(subGraphs[0].vertices().size() == 2);
-                    REQUIRE(subGraphs[0].vertices().begin()->data() == std::make_tuple(0));
-                    REQUIRE((++subGraphs[0].vertices().begin())->data() == std::make_tuple(1));
+                    REQUIRE(subGraphs[0].vertices().begin()->data() == 0);
+                    REQUIRE((++subGraphs[0].vertices().begin())->data() == 1);
                 }
                 {
                     REQUIRE(subGraphs[1].vertices().size() == 1);
-                    REQUIRE(subGraphs[1].vertices().begin()->data() == std::make_tuple(2));
+                    REQUIRE(subGraphs[1].vertices().begin()->data() == 2);
                 }
             }
         }

@@ -99,7 +99,7 @@ inline bool Graph<Vertex>::containsEdge(VertexIndex v1, VertexIndex v2) const {
 
 template<typename Vertex>
 inline typename Graph<Vertex>::VertexIndex Graph<Vertex>::addVertex(typename Vertex::data_type data) {
-    auto it = _vertices.emplace_back(std::move(data));
+    auto it = _vertices.emplace_back(data);
     return std::distance(_vertices.begin(), it);
 }
 
