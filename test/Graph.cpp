@@ -177,7 +177,8 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             WHEN("removing the first particle") {
                 graph.removeVertex(0);
                 THEN("the size of the graph is 1") {
-                    REQUIRE(graph.vertices().size() == 1);
+                    REQUIRE(graph.vertices().size() == 2);
+                    REQUIRE(graph.vertices().size_active() == 1);
                     REQUIRE(graph.vertices().at(1).neighbors().empty());
                     REQUIRE(graph.vertices().at(1).data() == 1);
                     REQUIRE(graph.nEdges() == 0);
@@ -335,7 +336,8 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
         WHEN("Removing a vertex from graph g1") {
             g1.removeVertex(3);
             THEN("The graph is a fully connected graph with 4 vertices") {
-                REQUIRE(g1.vertices().size() == 4);
+                REQUIRE(g1.vertices().size_active() == 4);
+                REQUIRE(g1.vertices().size() == 5);
                 REQUIRE(g1.nEdges() == g2.nEdges());
                 for(const auto&[v1, v2] : g1.edges()) {
                     REQUIRE(!g1.vertices().at(v1).deactivated());
@@ -347,14 +349,16 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             AND_WHEN("Removing a second vertex from g1") {
                 g1.removeVertex(2);
                 THEN("The graph is a fully connected graph with 3 vertices") {
-                    REQUIRE(g1.vertices().size() == 3);
+                    REQUIRE(g1.vertices().size_active() == 3);
+                    REQUIRE(g1.vertices().size() == 5);
                     REQUIRE(g1.nEdges() == g2.nEdges() - 3);
                 }
 
                 AND_WHEN("Removing a third vertex from g1") {
                     g1.removeVertex(1);
                     THEN("The graph is a fully connected graph with 2 vertices") {
-                        REQUIRE(g1.vertices().size() == 2);
+                        REQUIRE(g1.vertices().size_active() == 2);
+                        REQUIRE(g1.vertices().size() == 5);
                         REQUIRE(g1.nEdges() == g2.nEdges() - 3 - 2);
                         for(auto [i1, i2] : g1.edges()) {
                             const auto &v1 = g1.vertices().at(i1);

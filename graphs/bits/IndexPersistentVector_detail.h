@@ -89,7 +89,7 @@ public:
      * @return the size
      */
     [[nodiscard]] size_type size() const {
-        return _backingVector.size() - _blanks.size();
+        return _backingVector.size();
     }
 
     /**
@@ -189,7 +189,7 @@ public:
      * container.
      * @return the number of deactivated elements
      */
-    typename BlanksList::size_type n_deactivated() const {
+    [[nodiscard]] typename BlanksList::size_type n_deactivated() const {
         return _blanks.size();
     }
 
@@ -197,8 +197,8 @@ public:
      * The effective size of this container
      * @return the effective size
      */
-    size_type effective_size() const {
-        return _backingVector.size();
+    [[nodiscard]] size_type size_active() const {
+        return _backingVector.size() - n_deactivated();
     }
 
     /**
