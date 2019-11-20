@@ -7,6 +7,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
+#include <fmt/format.h>
 
 namespace graphs::detail {
 template<typename T, typename = void>
@@ -67,6 +68,126 @@ public:
      * the const reverse iterator type, same as backing vector's const reverse iterator
      */
     using const_reverse_iterator = typename BackingVector<T, Rest...>::const_reverse_iterator;
+
+    class active_iterator {
+    public:
+        using difference_type = typename iterator::difference_type;
+        using value_type = typename iterator::value_type;
+        using reference = typename iterator::reference;
+        using pointer = typename iterator::pointer;
+        using iterator_category = typename iterator::iterator_category;
+
+        active_iterator() : parent(), begin(), end(), blanksPtr() {}
+        active_iterator(iterator parent, iterator begin, iterator end, BlanksList* blanksPtr)
+            : parent(parent), begin(begin), end(end), blanksPtr(blanksPtr) {}
+
+        bool operator==(const active_iterator& other) { return parent == other.parent; }
+        bool operator!=(const active_iterator& other) { return parent != other.parent; }
+        bool operator<(const active_iterator& other) { return parent < other.parent; }
+        bool operator>(const active_iterator& other) { return parent > other.parent; }
+        bool operator<=(const active_iterator& other) { return parent <= other.parent; }
+        bool operator>=(const active_iterator& other) { return parent >= other.parent; }
+
+        reference operator*() const { return *parent; }
+        pointer operator->() const { return parent.operator->(); }
+        reference operator[](size_type i) const {
+            return *(operator+(i));
+        }
+
+        iterator& operator++() {
+            if(parent != end) {
+                ++parent;
+                auto pos = std::distance(begin, parent);
+                auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+                while(it != blanksPtr->end() && parent != end && pos == *it) {
+                    ++parent;
+                    ++pos;
+                    ++it;
+                }
+            }
+            return *this;
+        }
+
+        iterator operator++(int) {
+            iterator copy(*this);
+            ++(*this);
+            return copy;
+        }
+        iterator& operator--() {
+            if(parent != begin) {
+                --parent;
+                auto pos = std::distance(begin, parent);
+                auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+                while(it != blanksPtr->begin() && parent != begin && pos == *it) {
+                    --parent;
+                    --pos;
+                    --it;
+                }
+            }
+            return *this;
+        }
+        iterator operator--(int) {
+            iterator copy(*this);
+            --(*this);
+            return copy;
+        }
+
+        iterator& operator+=(size_type n) {
+            auto pos = std::distance(begin, parent);
+            auto targetPos = pos + n;
+            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+            while(it != blanksPtr->end() && *it < targetPos) {
+                ++targetPos;
+                ++it;
+            }
+            parent += targetPos - pos;
+            return *this;
+        }
+
+        iterator operator+(size_type n) const {
+            iterator copy(*this);
+            copy += n;
+            return copy;
+        }
+
+        friend iterator operator+(size_type n, const iterator& it) {
+            return it + n;
+        }
+
+        iterator& operator-=(size_type n) {
+            auto pos = std::distance(begin, parent);
+            auto targetPos = pos - n;
+            auto it = std::upper_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+            while (it != blanksPtr->begin() && *it >= targetPos) {
+                --targetPos;
+                --it;
+            }
+            parent -= pos - targetPos;
+            return *this;
+        }
+
+        iterator operator-(size_type n) const {
+            iterator copy (*this);
+            copy -= n;
+            return copy;
+        }
+
+        difference_type operator-(iterator rhs) const {
+            auto dist = parent - rhs.parent;
+            // find number of blanks in that range
+            auto pos = std::distance(begin, parent);
+            auto rhsPos = std::distance(begin, rhs.parent);
+            auto nBlanksThis = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos));
+            auto nBlanksThat = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), rhsPos));
+            return dist - (nBlanksThis - nBlanksThat);
+        }
+
+    private:
+        iterator parent;
+        iterator begin;
+        iterator end;
+        const BlanksList *blanksPtr;
+    };
 
     /**
      * gives access to the backing vector
@@ -168,7 +289,7 @@ public:
      */
     void erase(iterator pos) {
         deactivate(pos);
-        _blanks.push_back(pos - _backingVector.begin());
+        insertBlank(std::distance(_backingVector.begin(), pos));
     }
 
     /**
@@ -180,7 +301,7 @@ public:
         auto offset = start - _backingVector.begin();
         for (auto it = start; it != end; ++it, ++offset) {
             deactivate(it);
-            _blanks.push_back(offset);
+            insertBlank(offset);
         }
     }
 
@@ -233,6 +354,10 @@ public:
      */
     iterator begin() noexcept {
         return _backingVector.begin();
+    }
+
+    active_iterator begin_active() noexcept {
+        return active_iterator(_backingVector.begin(), _backingVector.begin(), _backingVector.end(), &_blanks);
     }
 
     /**
@@ -343,6 +468,11 @@ private:
     template<typename Q = T>
     typename std::enable_if<detail::can_be_ptr_deactivated<Q>::value>::type deactivate(iterator it) {
         (*it)->deactivate();
+    }
+
+    void insertBlank(typename BlanksList::value_type val) {
+        auto it = std::lower_bound(_blanks.begin(), _blanks.end(), val, std::greater<>());
+        _blanks.insert(it, val);
     }
 
     BlanksList _blanks;
