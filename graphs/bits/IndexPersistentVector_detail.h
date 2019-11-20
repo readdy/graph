@@ -94,7 +94,7 @@ public:
             return *(operator+(i));
         }
 
-        iterator& operator++() {
+        active_iterator& operator++() {
             if(parent != end) {
                 ++parent;
                 auto pos = std::distance(begin, parent);
@@ -108,12 +108,12 @@ public:
             return *this;
         }
 
-        iterator operator++(int) {
+        active_iterator operator++(int) {
             iterator copy(*this);
             ++(*this);
             return copy;
         }
-        iterator& operator--() {
+        active_iterator& operator--() {
             if(parent != begin) {
                 --parent;
                 auto pos = std::distance(begin, parent);
@@ -126,13 +126,13 @@ public:
             }
             return *this;
         }
-        iterator operator--(int) {
+        active_iterator operator--(int) {
             iterator copy(*this);
             --(*this);
             return copy;
         }
 
-        iterator& operator+=(size_type n) {
+        active_iterator& operator+=(size_type n) {
             auto pos = std::distance(begin, parent);
             auto targetPos = pos + n;
             auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
@@ -144,17 +144,17 @@ public:
             return *this;
         }
 
-        iterator operator+(size_type n) const {
+        active_iterator operator+(size_type n) const {
             iterator copy(*this);
             copy += n;
             return copy;
         }
 
-        friend iterator operator+(size_type n, const iterator& it) {
+        friend active_iterator operator+(size_type n, const active_iterator& it) {
             return it + n;
         }
 
-        iterator& operator-=(size_type n) {
+        active_iterator& operator-=(size_type n) {
             auto pos = std::distance(begin, parent);
             auto targetPos = pos - n;
             auto it = std::upper_bound(blanksPtr->begin(), blanksPtr->end(), pos);
@@ -166,13 +166,13 @@ public:
             return *this;
         }
 
-        iterator operator-(size_type n) const {
+        active_iterator operator-(size_type n) const {
             iterator copy (*this);
             copy -= n;
             return copy;
         }
 
-        difference_type operator-(iterator rhs) const {
+        difference_type operator-(active_iterator rhs) const {
             auto dist = parent - rhs.parent;
             // find number of blanks in that range
             auto pos = std::distance(begin, parent);
@@ -366,6 +366,10 @@ public:
      */
     iterator end() noexcept {
         return _backingVector.end();
+    }
+
+    active_iterator end_active() noexcept {
+        return active_iterator(_backingVector.end(), _backingVector.begin(), _backingVector.end(), &_blanks);
     }
 
     /**
