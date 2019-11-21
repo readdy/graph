@@ -51,6 +51,10 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                 for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
                     REQUIRE(it->val() == v.at(mapping[ix]).val());
                 }
+                REQUIRE((*v.begin_active()).val() == 5);
+                REQUIRE((*(v.begin_active()+1)).val() == 1);
+                REQUIRE((*(v.begin_active()+2)).val() == 8);
+                REQUIRE((*(v.begin_active()+3)).val() == 3);
             }
             AND_WHEN("Removing element number 1") {
                 v.erase(v.begin() + 1);
@@ -71,6 +75,40 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                     THEN("The active size is 2") {
                         REQUIRE(std::distance(v.begin_active(), v.end_active()) == 2);
                         REQUIRE(v.size_active() == 2);
+                    }
+
+                    AND_THEN("the active iterator skips the elements with numbers 7, 1, 5") {
+                        std::vector<std::size_t> mapping {3, 4};
+                        auto ix = 0;
+                        for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                            REQUIRE(it->val() == v.at(mapping[ix]).val());
+                        }
+                    }
+
+                    AND_WHEN("Removing element 4") {
+                        v.erase(v.begin() + 4);
+                        THEN("The active size is 1") {
+                            REQUIRE(std::distance(v.begin_active(), v.end_active()) == 1);
+                            REQUIRE(v.size_active() == 1);
+                        }
+                        AND_THEN("the active iterator skips the elements with numbers 7, 1, 5, 3") {
+                            std::vector<std::size_t> mapping {3};
+                            auto ix = 0;
+                            for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                                REQUIRE(it->val() == v.at(mapping[ix]).val());
+                            }
+                        }
+
+                        AND_WHEN("Removing element 3") {
+                            v.erase(v.begin() + 3);
+                            THEN("The vector is empty") {
+                                REQUIRE(v.empty_active());
+                                REQUIRE(v.size_active() == 0);
+                            }
+                            AND_THEN("the active iterator skips all the elements") {
+                                REQUIRE(v.begin_active() == v.end_active());
+                            }
+                        }
                     }
                 }
             }
