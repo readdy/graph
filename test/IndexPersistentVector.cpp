@@ -115,6 +115,17 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                                 REQUIRE(v.begin_active() == v.end_active());
                             }
                         }
+
+                        AND_WHEN("Adding a new element 100") {
+                            v.push_back(A{100});
+                            THEN("The active size is 3") {
+                                REQUIRE(std::distance(v.begin_active(), v.end_active()) == 3);
+                                REQUIRE(v.size_active() == 3);
+                            }
+                            AND_THEN("The vector contains {8, 100}") {
+                                REQUIRE(*v.begin_active() == )
+                            }
+                        }
                     }
                 }
             }
