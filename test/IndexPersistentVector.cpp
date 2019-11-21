@@ -68,6 +68,9 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                     for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
                         REQUIRE(it->val() == v.at(mapping[ix]).val());
                     }
+                    REQUIRE((*v.begin_active()).val() == 5);
+                    REQUIRE((*(v.begin_active()+1)).val() == 8);
+                    REQUIRE((*(v.begin_active()+2)).val() == 3);
                 }
 
                 AND_WHEN("Removing element number 0") {
@@ -83,6 +86,8 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                         for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
                             REQUIRE(it->val() == v.at(mapping[ix]).val());
                         }
+                        REQUIRE((*(v.begin_active()+0)).val() == 8);
+                        REQUIRE((*(v.begin_active()+1)).val() == 3);
                     }
 
                     AND_WHEN("Removing element 4") {
@@ -97,6 +102,7 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                             for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
                                 REQUIRE(it->val() == v.at(mapping[ix]).val());
                             }
+                            REQUIRE((*(v.begin_active()+0)).val() == 8);
                         }
 
                         AND_WHEN("Removing element 3") {
