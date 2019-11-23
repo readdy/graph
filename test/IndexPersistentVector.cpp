@@ -4,6 +4,7 @@
 
 #include <catch2/catch.hpp>
 #include <graphs/IndexPersistentVector.h>
+#include <set>
 
 class A {
 public:
@@ -18,13 +19,58 @@ public:
 
     [[nodiscard]] auto val() const { return x; }
 
+    bool operator==(const A &other) const {
+        return other.active == active && other.x == x;
+    }
+
+    bool operator<(const A &other) const {
+        return other.x < x;
+    }
+
 private:
     bool active {true};
     int x;
 };
 
-TEST_CASE("Test index persistent vector", "[ipv]") {
+bool randomBool() {
+    static auto gen = std::bind(std::uniform_int_distribution<>(0,1),std::default_random_engine());
+    return gen();
+}
 
+TEST_CASE("IPV usage test", "[ipv]") {
+    std::vector<A> elems;
+    graphs::IndexPersistentVector<A> v;
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(1, 600000);
+
+    for(int i = 0; i < 10000; ++i) {
+        REQUIRE(elems.size() == v.size_active());
+        if(randomBool()) {
+            // add a random element
+            auto n = dist(rng);
+            v.push_back(A(n));
+            elems.emplace_back(n);
+        } else {
+            if(!elems.empty()) {
+                std::uniform_int_distribution<std::mt19937::result_type> draw(0, elems.size()-1);
+                auto it = v.begin_active() + draw(rng);
+                auto val = it->val();
+                v.erase(it);
+                auto findit = std::find_if(elems.begin(), elems.end(), [val](auto a) { return a.val() == val; });
+                REQUIRE(findit != elems.end());
+                elems.erase(findit);
+            }
+        }
+
+        for(auto a : elems) {
+            REQUIRE(std::find(v.begin_active(), v.end_active(), a) != v.end_active());
+        }
+        for(auto it = v.begin_active(); it != v.end_active(); ++it) {
+            REQUIRE(std::find(elems.begin(), elems.end(), *it) != elems.end());
+        }
+    }
 }
 
 SCENARIO("Test ipv active iterator", "[ipv]") {
@@ -118,12 +164,19 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
 
                         AND_WHEN("Adding a new element 100") {
                             v.push_back(A{100});
-                            THEN("The active size is 3") {
-                                REQUIRE(std::distance(v.begin_active(), v.end_active()) == 3);
-                                REQUIRE(v.size_active() == 3);
+                            THEN("The active size is 2") {
+                                REQUIRE(v.size_active() == 2);
+                                REQUIRE(std::distance(v.begin_active(), v.end_active()) == 2);
                             }
                             AND_THEN("The vector contains {8, 100}") {
-                                REQUIRE(*v.begin_active() == )
+                                auto it8 = std::find_if(v.begin_active(), v.end_active(),
+                                                        [](auto a) { return a.val() == 8; });
+                                REQUIRE(!it8->deactivated());
+                                REQUIRE(it8 != v.end_active());
+                                auto it100 = std::find_if(v.begin_active(), v.end_active(),
+                                                         [](auto a) { return a.val() == 100; });
+                                REQUIRE(!it100->deactivated());
+                                REQUIRE(it100 != v.end_active());
                             }
                         }
                     }

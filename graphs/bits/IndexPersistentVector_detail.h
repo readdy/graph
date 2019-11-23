@@ -178,6 +178,10 @@ public:
             return dist - (nBlanksThis - nBlanksThat);
         }
 
+        auto inner_iterator() const {
+            return parent;
+        }
+
     private:
         void skipBlanks() {
             auto pos = std::distance(begin, parent);
@@ -300,6 +304,10 @@ public:
     void erase(iterator pos) {
         deactivate(pos);
         insertBlank(std::distance(_backingVector.begin(), pos));
+    }
+
+    void erase(active_iterator pos) {
+        erase(pos.inner_iterator());
     }
 
     /**
