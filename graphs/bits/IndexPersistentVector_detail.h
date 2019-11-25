@@ -105,20 +105,14 @@ public:
         }
 
         active_iterator operator++(int) {
-            iterator copy(*this);
+            active_iterator copy(*this);
             ++(*this);
             return copy;
         }
         active_iterator& operator--() {
-            if(parent != begin) {
+            --parent;
+            while(parent >= begin && parent->deactivated()) {
                 --parent;
-                auto pos = std::distance(begin, parent);
-                auto it = std::upper_bound(blanksPtr->rbegin(), blanksPtr->rend(), pos);
-                while(it != blanksPtr->rend() && parent != begin && pos == *it) {
-                    --parent;
-                    --pos;
-                    ++it;
-                }
             }
             return *this;
         }
@@ -153,10 +147,11 @@ public:
         active_iterator& operator-=(size_type n) {
             auto pos = std::distance(begin, parent);
             auto targetPos = pos - n;
-            auto it = std::upper_bound(blanksPtr->begin(), blanksPtr->end(), targetPos);
-            while (it != blanksPtr->begin() && *it >= targetPos) {
+            auto it = std::upper_bound(blanksPtr->rbegin(), blanksPtr->rend(), targetPos);
+            bool atEnd = it == blanksPtr->rend();
+            while (!atEnd && *it >= targetPos) {
                 --targetPos;
-                --it;
+                ++it;
             }
             parent -= pos - targetPos;
             return *this;

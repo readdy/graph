@@ -5,7 +5,6 @@
 #include <catch2/catch.hpp>
 #include <graphs/IndexPersistentVector.h>
 #include <set>
-#include <iostream>
 
 class A {
 public:
@@ -107,21 +106,25 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                     REQUIRE((*(v.begin_active() + 3)).val() == 3);
                 }
                 WHEN("Accessing it through minus operator") {
-                    // todo
+                    REQUIRE((v.end_active() - 1)->val() == 3);
+                    REQUIRE((v.end_active() - 2)->val() == 8);
+                    REQUIRE((v.end_active() - 3)->val() == 1);
+                    REQUIRE((v.end_active() - 4)->val() == 5);
                 }
                 WHEN("Accessing it through stepwise increase") {
-                    // todo
+                    auto itBegin = v.begin_active();
+                    REQUIRE((itBegin++)->val() == 5);
+                    REQUIRE((itBegin++)->val() == 1);
+                    REQUIRE((itBegin++)->val() == 8);
+                    REQUIRE((itBegin++)->val() == 3);
+                    REQUIRE(itBegin == v.end_active());
                 }
                 WHEN("Accessing it through stepwise decrease") {
                     auto itEnd = v.end_active();
-                    --itEnd;
-                    REQUIRE(itEnd->val() == 3);
-                    --itEnd;
-                    REQUIRE(itEnd->val() == 8);
-                    --itEnd;
-                    REQUIRE(itEnd->val() == 1);
-                    --itEnd;
-                    REQUIRE(itEnd->val() == 5);
+                    REQUIRE((--itEnd)->val() == 3);
+                    REQUIRE((--itEnd)->val() == 8);
+                    REQUIRE((--itEnd)->val() == 1);
+                    REQUIRE((--itEnd)->val() == 5);
                     REQUIRE(itEnd == v.begin_active());
                 }
             }
@@ -145,19 +148,22 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                         REQUIRE((*(v.begin_active() + 2)).val() == 3);
                     }
                     WHEN("Accessing it through minus operator") {
-                        // todo
+                        REQUIRE((v.end_active() - 1)->val() == 3);
+                        REQUIRE((v.end_active() - 2)->val() == 8);
+                        REQUIRE((v.end_active() - 3)->val() == 5);
                     }
                     WHEN("Accessing it through stepwise increase") {
-                        // todo
+                        auto it = v.begin_active();
+                        REQUIRE((it++)->val() == 5);
+                        REQUIRE((it++)->val() == 8);
+                        REQUIRE((it++)->val() == 3);
+                        REQUIRE(it == v.end_active());
                     }
                     WHEN("Accessing it through stepwise decrease") {
                         auto itEnd = v.end_active();
-                        --itEnd;
-                        REQUIRE(itEnd->val() == 3);
-                        --itEnd;
-                        REQUIRE(itEnd->val() == 8);
-                        --itEnd;
-                        REQUIRE(itEnd->val() == 5);
+                        REQUIRE((--itEnd)->val() == 3);
+                        REQUIRE((--itEnd)->val() == 8);
+                        REQUIRE((--itEnd)->val() == 5);
                         REQUIRE(itEnd == v.begin_active());
                     }
                 }
