@@ -5,6 +5,7 @@
 #include <catch2/catch.hpp>
 #include <graphs/IndexPersistentVector.h>
 #include <set>
+#include <iostream>
 
 class A {
 public:
@@ -92,15 +93,37 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                 REQUIRE(v.size_active() == 4);
             }
             AND_THEN("the active iterator skips the element with number 7") {
-                std::vector<std::size_t> mapping {0, 1, 3, 4};
-                auto ix = 0;
-                for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
-                    REQUIRE(it->val() == v.at(mapping[ix]).val());
+                WHEN("Accessing it through random access") {
+                    std::vector<std::size_t> mapping{0, 1, 3, 4};
+                    auto ix = 0;
+                    for (auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                        REQUIRE(it->val() == v.at(mapping[ix]).val());
+                    }
                 }
-                REQUIRE((*v.begin_active()).val() == 5);
-                REQUIRE((*(v.begin_active()+1)).val() == 1);
-                REQUIRE((*(v.begin_active()+2)).val() == 8);
-                REQUIRE((*(v.begin_active()+3)).val() == 3);
+                WHEN("Accessing it through plus operator") {
+                    REQUIRE((*v.begin_active()).val() == 5);
+                    REQUIRE((*(v.begin_active() + 1)).val() == 1);
+                    REQUIRE((*(v.begin_active() + 2)).val() == 8);
+                    REQUIRE((*(v.begin_active() + 3)).val() == 3);
+                }
+                WHEN("Accessing it through minus operator") {
+                    // todo
+                }
+                WHEN("Accessing it through stepwise increase") {
+                    // todo
+                }
+                WHEN("Accessing it through stepwise decrease") {
+                    auto itEnd = v.end_active();
+                    --itEnd;
+                    REQUIRE(itEnd->val() == 3);
+                    --itEnd;
+                    REQUIRE(itEnd->val() == 8);
+                    --itEnd;
+                    REQUIRE(itEnd->val() == 1);
+                    --itEnd;
+                    REQUIRE(itEnd->val() == 5);
+                    REQUIRE(itEnd == v.begin_active());
+                }
             }
             AND_WHEN("Removing element number 1") {
                 v.erase(v.begin() + 1);
@@ -109,14 +132,34 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                     REQUIRE(v.size_active() == 3);
                 }
                 AND_THEN("the active iterator skips the elements with numbers 7, 1") {
-                    std::vector<std::size_t> mapping {0, 3, 4};
-                    auto ix = 0;
-                    for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
-                        REQUIRE(it->val() == v.at(mapping[ix]).val());
+                    WHEN("Accessing it through random access") {
+                        std::vector<std::size_t> mapping{0, 3, 4};
+                        auto ix = 0;
+                        for (auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                            REQUIRE(it->val() == v.at(mapping[ix]).val());
+                        }
                     }
-                    REQUIRE((*v.begin_active()).val() == 5);
-                    REQUIRE((*(v.begin_active()+1)).val() == 8);
-                    REQUIRE((*(v.begin_active()+2)).val() == 3);
+                    WHEN("Accessing it through plus operator") {
+                        REQUIRE((*v.begin_active()).val() == 5);
+                        REQUIRE((*(v.begin_active() + 1)).val() == 8);
+                        REQUIRE((*(v.begin_active() + 2)).val() == 3);
+                    }
+                    WHEN("Accessing it through minus operator") {
+                        // todo
+                    }
+                    WHEN("Accessing it through stepwise increase") {
+                        // todo
+                    }
+                    WHEN("Accessing it through stepwise decrease") {
+                        auto itEnd = v.end_active();
+                        --itEnd;
+                        REQUIRE(itEnd->val() == 3);
+                        --itEnd;
+                        REQUIRE(itEnd->val() == 8);
+                        --itEnd;
+                        REQUIRE(itEnd->val() == 5);
+                        REQUIRE(itEnd == v.begin_active());
+                    }
                 }
 
                 AND_WHEN("Removing element number 0") {
