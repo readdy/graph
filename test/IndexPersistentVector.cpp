@@ -15,7 +15,7 @@ public:
         active = false;
     }
 
-    bool deactivated() { return !active; }
+    [[nodiscard]] bool deactivated() const { return !active; }
 
     [[nodiscard]] auto val() const { return x; }
 
@@ -188,11 +188,15 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                         }
                         WHEN("Accessing it through plus operator") {
                             REQUIRE((*(v.begin_active() + 0)).val() == 8);
+                            REQUIRE((*(v.cbegin_active() + 0)).val() == 8);
                             REQUIRE((*(v.begin_active() + 1)).val() == 3);
+                            REQUIRE((*(v.cbegin_active() + 1)).val() == 3);
                         }
                         WHEN("Accessing it through minus operator") {
                             REQUIRE((v.end_active() - 1)->val() == 3);
+                            REQUIRE((v.cend_active() - 1)->val() == 3);
                             REQUIRE((v.end_active() - 2)->val() == 8);
+                            REQUIRE((v.cend_active() - 2)->val() == 8);
                         }
                         WHEN("Accessing it through stepwise increase") {
                             auto it = v.begin_active();
@@ -200,11 +204,23 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                             REQUIRE((it++)->val() == 3);
                             REQUIRE(it == v.end_active());
                         }
+                        WHEN("Accessing it through stepwise increase const") {
+                            auto it = v.cbegin_active();
+                            REQUIRE((it++)->val() == 8);
+                            REQUIRE((it++)->val() == 3);
+                            REQUIRE(it == v.cend_active());
+                        }
                         WHEN("Accessing it through stepwise decrease") {
                             auto itEnd = v.end_active();
                             REQUIRE((--itEnd)->val() == 3);
                             REQUIRE((--itEnd)->val() == 8);
                             REQUIRE(itEnd == v.begin_active());
+                        }
+                        WHEN("Accessing it through stepwise decrease const") {
+                            auto itEnd = v.cend_active();
+                            REQUIRE((--itEnd)->val() == 3);
+                            REQUIRE((--itEnd)->val() == 8);
+                            REQUIRE(itEnd == v.cbegin_active());
                         }
                     }
 

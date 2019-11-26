@@ -16,17 +16,18 @@ struct can_be_deactivated : std::false_type {
 template<typename T>
 struct can_be_deactivated<T, std::void_t<decltype(std::declval<T>().deactivate())>> : std::true_type {
 };
-
 template<typename T, typename = void>
-struct can_be_ptr_deactivated : std::false_type {
+struct can_query_active : std::false_type {
 };
 template<typename T>
-struct can_be_ptr_deactivated<T, std::void_t<decltype(std::declval<T>()->deactivate())>> : std::true_type {
+struct can_query_active<T, std::void_t<decltype(std::declval<T>().deactivated())>> : std::true_type {
 };
+
+
 
 template<template<typename...> class BackingVector, typename T, typename... Rest>
 class IndexPersistentContainer {
-    static_assert(detail::can_be_deactivated<T>::value || detail::can_be_ptr_deactivated<T>::value,
+    static_assert(detail::can_be_deactivated<T>::value && detail::can_query_active<T>::value,
                   "IndexPersistentVector can only work with (ptr) element types which have a deactivate() method");
 public:
     /**
@@ -193,6 +194,139 @@ public:
         const BlanksList *blanksPtr;
     };
 
+    class const_active_iterator {
+    public:
+        using difference_type = typename const_iterator::difference_type;
+        using value_type = typename const_iterator::value_type;
+        using reference = typename const_iterator::reference;
+        using pointer = typename const_iterator::pointer;
+        using iterator_category = typename const_iterator::iterator_category;
+
+        const_active_iterator() : parent(), begin(), end(), blanksPtr() {}
+
+        const_active_iterator(const_iterator parent, const_iterator begin, const_iterator end, const BlanksList *blanksPtr)
+                : parent(parent), begin(begin), end(end), blanksPtr(blanksPtr) {
+            skipBlanks();
+        }
+        const_active_iterator(const const_active_iterator&) = default;
+        const_active_iterator(const_active_iterator&&) noexcept = default;
+        ~const_active_iterator() = default;
+
+        const_active_iterator &operator=(const const_active_iterator &) = default;
+        const_active_iterator &operator=(const_active_iterator &&) noexcept = default;
+
+        bool operator==(const const_active_iterator &rhs) const { return rhs.parent == parent; }
+        bool operator!=(const const_active_iterator &rhs) const { return rhs.parent != parent; }
+        bool operator<(const const_active_iterator &rhs) const { return parent < rhs.parent; }
+        bool operator>(const const_active_iterator &rhs) const { return parent > rhs.parent; }
+        bool operator<=(const const_active_iterator &rhs) const { return parent <= rhs.parent; }
+        bool operator>=(const const_active_iterator &rhs) const { return parent >= rhs.parent; }
+
+        const_active_iterator &operator++() {
+            if(parent != end) {
+                ++parent;
+                skipBlanks();
+            }
+            return *this;
+        }
+
+        const_active_iterator operator++(int) {
+            const_active_iterator copy(*this);
+            copy++;
+            return copy;
+        }
+
+        const_active_iterator &operator--() {
+            --parent;
+            while(parent >= begin && parent->deactivated()) {
+                --parent;
+            }
+            return *this;
+        }
+
+        const_active_iterator operator--(int){
+            const_active_iterator copy(*this);
+            copy--;
+            return copy;
+        }
+
+        const_active_iterator &operator+=(size_type n) {
+            auto pos = std::distance(begin, parent);
+            auto targetPos = pos + n;
+            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+            while(it != blanksPtr->end() && *it <= targetPos) {
+                ++targetPos;
+                ++it;
+            }
+            parent += targetPos - pos;
+            return *this;
+        }
+        const_active_iterator operator+(size_type n) const {
+            const_active_iterator copy(*this);
+            copy += n;
+            return copy;
+        }
+
+        friend const_active_iterator operator+(size_type n, const const_active_iterator &it) {
+            return it + n;
+        }
+
+        const_active_iterator &operator-=(size_type n) {
+            auto pos = std::distance(begin, parent);
+            auto targetPos = pos - n;
+            auto it = std::lower_bound(blanksPtr->rbegin(), blanksPtr->rend(), pos, std::greater<>());
+            while (it != blanksPtr->rend() && *it >= targetPos) {
+                --targetPos;
+                ++it;
+            }
+            parent -= pos - targetPos;
+            return *this;
+        }
+
+        const_active_iterator operator-(size_type n) const {
+            auto copy = const_active_iterator(*this);
+            copy -= n;
+            return copy;
+        }
+
+        difference_type operator-(const_active_iterator rhs) const {
+            auto dist = parent - rhs.parent;
+            // find number of blanks in that range
+            auto pos = std::distance(begin, parent);
+            auto rhsPos = std::distance(begin, rhs.parent);
+            auto nBlanksThis = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos));
+            auto nBlanksThat = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), rhsPos));
+            return dist - (nBlanksThis - nBlanksThat);
+        }
+
+        reference operator*() const {
+            return *parent;
+        }
+
+        pointer operator->() const {
+            return parent.operator->();
+        }
+
+        reference operator[](size_type n) const {
+            return *(operator+(n));
+        }
+    private:
+        void skipBlanks() {
+            auto pos = std::distance(begin, parent);
+            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+            while (it != blanksPtr->end() && parent != end && pos == *it) {
+                ++parent;
+                ++pos;
+                ++it;
+            }
+        }
+
+        const_iterator parent;
+        const_iterator begin;
+        const_iterator end;
+        const BlanksList *blanksPtr;
+    };
+
     /**
      * gives access to the backing vector
      * @return a reference to the backing vector
@@ -317,6 +451,13 @@ public:
         }
     }
 
+    void erase(active_iterator start, const_active_iterator end) {
+        for(auto it = start; it != end; ++it) {
+            deactivate(it);
+            insertBlank(std::distance(_backingVector.begin(), it.inner_iterator()));
+        }
+    }
+
     /**
      * Yields the number of deactivated elements, i.e., size() - n_deactivated() is the effective size of this
      * container.
@@ -369,7 +510,15 @@ public:
     }
 
     active_iterator begin_active() noexcept {
-        return active_iterator(_backingVector.begin(), _backingVector.begin(), _backingVector.end(), &_blanks);
+        return {_backingVector.begin(), _backingVector.begin(), _backingVector.end(), &_blanks};
+    }
+
+    const_active_iterator begin_active() const noexcept {
+        return cbegin_active();
+    }
+
+    const_active_iterator cbegin_active() const noexcept {
+        return {_backingVector.cbegin(), _backingVector.cbegin(), _backingVector.cend(), &_blanks};
     }
 
     /**
@@ -381,7 +530,15 @@ public:
     }
 
     active_iterator end_active() noexcept {
-        return active_iterator(_backingVector.end(), _backingVector.begin(), _backingVector.end(), &_blanks);
+        return {_backingVector.end(), _backingVector.begin(), _backingVector.end(), &_blanks};
+    }
+
+    const_active_iterator end_active() const noexcept {
+        return cend_active();
+    }
+
+    const_active_iterator cend_active() const noexcept {
+        return {_backingVector.end(), _backingVector.begin(), _backingVector.end(), &_blanks};
     }
 
     /**
@@ -481,9 +638,12 @@ private:
      * @tparam Q element type
      * @param it the iterator to the element
      */
-    template<typename Q = T>
-    typename std::enable_if<detail::can_be_ptr_deactivated<Q>::value>::type deactivate(iterator it) {
-        (*it)->deactivate();
+    void deactivate(iterator it) {
+        it->deactivate();
+    }
+
+    void deactivate(active_iterator it) {
+        it->deactivate();
     }
 
     void insertBlank(typename BlanksList::value_type val) {
