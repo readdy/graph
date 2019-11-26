@@ -232,7 +232,7 @@ public:
 
         const_active_iterator operator++(int) {
             const_active_iterator copy(*this);
-            copy++;
+            ++(*this);
             return copy;
         }
 
@@ -623,27 +623,12 @@ public:
 
 private:
 
-    /**
-     * Deactivate an element if the backing structure contains raw elements.
-     * @tparam Q element type
-     * @param it the iterator to the element
-     */
-    template<typename Q = T>
-    typename std::enable_if<detail::can_be_deactivated<Q>::value>::type deactivate(iterator it) {
-        it->deactivate();
-    }
-
-    /**
-     * Deactivate an element if the backing structure contains a pointer type.
-     * @tparam Q element type
-     * @param it the iterator to the element
-     */
     void deactivate(iterator it) {
         it->deactivate();
     }
 
     void deactivate(active_iterator it) {
-        it->deactivate();
+        deactivate(it.inner_iterator());
     }
 
     void insertBlank(typename BlanksList::value_type val) {
