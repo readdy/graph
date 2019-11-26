@@ -147,9 +147,8 @@ public:
         active_iterator& operator-=(size_type n) {
             auto pos = std::distance(begin, parent);
             auto targetPos = pos - n;
-            auto it = std::upper_bound(blanksPtr->rbegin(), blanksPtr->rend(), targetPos);
-            bool atEnd = it == blanksPtr->rend();
-            while (!atEnd && *it >= targetPos) {
+            auto it = std::lower_bound(blanksPtr->rbegin(), blanksPtr->rend(), pos, std::greater<>());
+            while (it != blanksPtr->rend() && *it >= targetPos) {
                 --targetPos;
                 ++it;
             }

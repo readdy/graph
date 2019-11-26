@@ -63,9 +63,12 @@ TEST_CASE("IPV usage test", "[ipv]") {
                 elems.erase(findit);
             }
         }
-
+        REQUIRE(v.size_active() == elems.size());
         for(auto a : elems) {
-            REQUIRE(std::find(v.begin_active(), v.end_active(), a) != v.end_active());
+            auto it = std::find(v.begin_active(), v.end_active(), a);
+            REQUIRE(it != v.end_active());
+            REQUIRE(it == (v.begin_active() + std::distance(v.begin_active(), it)));
+            REQUIRE(it == (v.end_active() - std::distance(it, v.end_active())));
         }
         for(auto it = v.begin_active(); it != v.end_active(); ++it) {
             REQUIRE(std::find(elems.begin(), elems.end(), *it) != elems.end());
@@ -176,13 +179,33 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                     }
 
                     AND_THEN("the active iterator skips the elements with numbers 7, 1, 5") {
-                        std::vector<std::size_t> mapping {3, 4};
-                        auto ix = 0;
-                        for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
-                            REQUIRE(it->val() == v.at(mapping[ix]).val());
+                        WHEN("Accessing it through random access") {
+                            std::vector<std::size_t> mapping {3, 4};
+                            auto ix = 0;
+                            for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                                REQUIRE(it->val() == v.at(mapping[ix]).val());
+                            }
                         }
-                        REQUIRE((*(v.begin_active()+0)).val() == 8);
-                        REQUIRE((*(v.begin_active()+1)).val() == 3);
+                        WHEN("Accessing it through plus operator") {
+                            REQUIRE((*(v.begin_active() + 0)).val() == 8);
+                            REQUIRE((*(v.begin_active() + 1)).val() == 3);
+                        }
+                        WHEN("Accessing it through minus operator") {
+                            REQUIRE((v.end_active() - 1)->val() == 3);
+                            REQUIRE((v.end_active() - 2)->val() == 8);
+                        }
+                        WHEN("Accessing it through stepwise increase") {
+                            auto it = v.begin_active();
+                            REQUIRE((it++)->val() == 8);
+                            REQUIRE((it++)->val() == 3);
+                            REQUIRE(it == v.end_active());
+                        }
+                        WHEN("Accessing it through stepwise decrease") {
+                            auto itEnd = v.end_active();
+                            REQUIRE((--itEnd)->val() == 3);
+                            REQUIRE((--itEnd)->val() == 8);
+                            REQUIRE(itEnd == v.begin_active());
+                        }
                     }
 
                     AND_WHEN("Removing element 4") {
@@ -197,7 +220,9 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                             for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
                                 REQUIRE(it->val() == v.at(mapping[ix]).val());
                             }
-                            REQUIRE((*(v.begin_active()+0)).val() == 8);
+                            REQUIRE(((v.begin_active() + 0))->val() == 8);
+                            REQUIRE((v.end_active() - 1)->val() == 8);
+                            REQUIRE((--v.end_active())->val() == 8);
                         }
 
                         AND_WHEN("Removing element 3") {
