@@ -363,7 +363,7 @@ inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(co
 
 template<typename Vertex>
 inline typename Graph<Vertex>::VertexList::size_type Graph<Vertex>::nVertices() const {
-    return _vertices.size();
+    return _vertices.size_active();
 }
 
 template<typename Vertex>
@@ -395,6 +395,36 @@ inline std::string Graph<Vertex>::gexf() const {
     ss << "</graph>";
     ss << "</gexf>";
     return ss.str();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::active_iterator Graph<Vertex>::begin() {
+    return _vertices.begin_active();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::begin() const {
+    return _vertices.cbegin_active();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::cbegin() const {
+    return _vertices.cbegin_active();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::active_iterator Graph<Vertex>::end() {
+    return _vertices.end_active();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::end() const {
+    return _vertices.cend_active();
+}
+
+template<typename Vertex>
+inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::cend() const {
+    return _vertices.cend_active();
 }
 
 }

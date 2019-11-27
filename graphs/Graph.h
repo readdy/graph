@@ -40,6 +40,14 @@ public:
 
     Graph &operator=(Graph &&) = default;
 
+    typename VertexList::active_iterator begin();
+    typename VertexList::const_active_iterator begin() const;
+    typename VertexList::const_active_iterator cbegin() const;
+
+    typename VertexList::active_iterator end();
+    typename VertexList::const_active_iterator end() const;
+    typename VertexList::const_active_iterator cend() const;
+
     const VertexList &vertices() const;
 
     VertexList &vertices();
