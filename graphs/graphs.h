@@ -9,5 +9,5 @@
 
 namespace graphs{
     using DefaultVertex = Vertex<std::size_t>;
-    using DefaultGraph = graphs::Graph<DefaultVertex>;
+    using DefaultGraph = graphs::Graph<graphs::IndexPersistentVector, DefaultVertex>;
 }

@@ -20,22 +20,22 @@ auto reverse_tuple(T t) {
 }
 }
 
-template<typename Vertex>
-inline Graph<Vertex>::Graph() = default;
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline Graph<VertexCollection, Vertex, Rest...>::Graph() = default;
 
-template<typename Vertex>
-inline Graph<Vertex>::Graph(typename Graph<Vertex>::VertexList vertexList) : _vertices(std::move(vertexList)) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline Graph<VertexCollection, Vertex, Rest...>::Graph(VertexList vertexList) : _vertices(std::move(vertexList)) {
     findEdges([this](const auto& edge) {
         _edges.push_back(edge);
     });
 }
 
-template<typename Vertex>
-inline Graph<Vertex>::~Graph() = default;
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline Graph<VertexCollection, Vertex, Rest...>::~Graph() = default;
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<typename PairCallback, typename TripleCallback, typename QuadrupleCallback>
-inline void Graph<Vertex>::findNTuples(const PairCallback &pairCallback,
+inline void Graph<VertexCollection, Vertex, Rest...>::findNTuples(const PairCallback &pairCallback,
                                        const TripleCallback &tripleCallback,
                                        const QuadrupleCallback &quadrupleCallback) {
     std::vector<char> visited (_vertices.size(), false);
@@ -73,18 +73,18 @@ inline void Graph<Vertex>::findNTuples(const PairCallback &pairCallback,
     }
 }
 
-template<typename Vertex>
-inline const typename Graph<Vertex>::VertexList &Graph<Vertex>::vertices() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline const typename Graph<VertexCollection, Vertex, Rest...>::VertexList &Graph<VertexCollection, Vertex, Rest...>::vertices() const {
     return _vertices;
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList &Graph<Vertex>::vertices() {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList &Graph<VertexCollection, Vertex, Rest...>::vertices() {
     return _vertices;
 }
 
-template<typename Vertex>
-inline bool Graph<Vertex>::containsEdge(const Edge &edge) const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline bool Graph<VertexCollection, Vertex, Rest...>::containsEdge(const Edge &edge) const {
     if(std::find(edges().begin(), edges().end(), edge) != edges().end()) {
         return true;
     } else {
@@ -92,26 +92,26 @@ inline bool Graph<Vertex>::containsEdge(const Edge &edge) const {
     }
 }
 
-template<typename Vertex>
-inline bool Graph<Vertex>::containsEdge(VertexIndex v1, VertexIndex v2) const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline bool Graph<VertexCollection, Vertex, Rest...>::containsEdge(VertexIndex v1, VertexIndex v2) const {
     return containsEdge(std::tie(v1, v2));
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::iterator Graph<Vertex>::addVertex(typename Vertex::data_type data) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::iterator Graph<VertexCollection, Vertex, Rest...>::addVertex(typename Vertex::data_type data) {
     return _vertices.emplace_back(data);
 }
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<auto debug>
-inline void Graph<Vertex>::addEdge(iterator it1, iterator it2) {
+inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(iterator it1, iterator it2) {
     addEdge(std::distance(_vertices.begin(), it1.inner_iterator()),
             std::distance(_vertices.begin(), it2.inner_iterator()));
 }
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<auto debug>
-inline void Graph<Vertex>::addEdge(VertexIndex ix1, VertexIndex ix2) {
+inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(VertexIndex ix1, VertexIndex ix2) {
     auto &v1 = _vertices.at(ix1);
     auto &v2 = _vertices.at(ix2);
     addVertexNeighbor<debug>(v1, ix2);
@@ -119,20 +119,20 @@ inline void Graph<Vertex>::addEdge(VertexIndex ix1, VertexIndex ix2) {
     _edges.push_back(std::make_tuple(ix1, ix2));
 }
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<auto debug>
-inline void Graph<Vertex>::addEdge(const Graph::Edge &edge) {
+inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(const Edge &edge) {
     addEdge<debug>(std::get<0>(edge), std::get<1>(edge));
 }
 
-template<typename Vertex>
-void Graph<Vertex>::removeEdge(iterator it1, iterator it2) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+void Graph<VertexCollection, Vertex, Rest...>::removeEdge(iterator it1, iterator it2) {
     removeEdge(std::distance(_vertices.begin(), it1.inner_iterator()),
                std::distance(_vertices.begin(), it2.inner_iterator()));
 }
 
-template<typename Vertex>
-inline void Graph<Vertex>::removeEdge(VertexIndex ix1, VertexIndex ix2) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline void Graph<VertexCollection, Vertex, Rest...>::removeEdge(VertexIndex ix1, VertexIndex ix2) {
     auto &v1 = _vertices.at(ix1);
     auto &v2 = _vertices.at(ix2);
     auto it = std::find_if(_edges.begin(), _edges.end(), [ix1, ix2](const auto& edge) {
@@ -148,18 +148,18 @@ inline void Graph<Vertex>::removeEdge(VertexIndex ix1, VertexIndex ix2) {
     }
 }
 
-template<typename Vertex>
-inline void Graph<Vertex>::removeEdge(const Graph::Edge &edge) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline void Graph<VertexCollection, Vertex, Rest...>::removeEdge(const Edge &edge) {
     removeEdge(std::get<0>(edge), std::get<1>(edge));
 }
 
-template<typename Vertex>
-void Graph<Vertex>::removeVertex(Graph::iterator it) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+void Graph<VertexCollection, Vertex, Rest...>::removeVertex(iterator it) {
     removeVertex(std::distance(_vertices.begin(), it));
 }
 
-template<typename Vertex>
-inline void Graph<Vertex>::removeVertex(VertexIndex ix) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline void Graph<VertexCollection, Vertex, Rest...>::removeVertex(VertexIndex ix) {
     removeNeighborsEdges(ix);
     _vertices.erase(_vertices.begin() + ix);
     _edges.erase(std::remove_if(_edges.begin(), _edges.end(), [ix](const auto &edge) {
@@ -167,14 +167,14 @@ inline void Graph<Vertex>::removeVertex(VertexIndex ix) {
     }), _edges.end());
 }
 
-template<typename Vertex>
-inline const std::vector<typename Graph<Vertex>::Edge> &Graph<Vertex>::edges() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline const std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Edge> &Graph<VertexCollection, Vertex, Rest...>::edges() const {
     return _edges;
 }
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<typename PairCallback>
-inline void Graph<Vertex>::findEdges(const PairCallback &edgeCallback) const {
+inline void Graph<VertexCollection, Vertex, Rest...>::findEdges(const PairCallback &edgeCallback) const {
     for(std::size_t i = 0; i < vertices().size(); ++i) {
         for(VertexIndex neighbor : vertices().at(i).neighbors()) {
             if(neighbor < i) {
@@ -185,10 +185,10 @@ inline void Graph<Vertex>::findEdges(const PairCallback &edgeCallback) const {
     }
 }
 
-template<typename Vertex>
-inline std::tuple<std::vector<typename Graph<Vertex>::Edge>,
-                  std::vector<typename Graph<Vertex>::Path3>,
-                  std::vector<typename Graph<Vertex>::Path4>> Graph<Vertex>::findNTuples() {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::tuple<std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Edge>,
+                  std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Path3>,
+                  std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Path4>> Graph<VertexCollection, Vertex, Rest...>::findNTuples() {
     auto tuple = std::make_tuple(std::vector<Edge>(), std::vector<Path3>(), std::vector<Path4>());
     findNTuples([&](const Edge &edge) {
         std::get<0>(tuple).push_back(edge);
@@ -200,20 +200,20 @@ inline std::tuple<std::vector<typename Graph<Vertex>::Edge>,
     return tuple;
 }
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<auto debug>
-inline void Graph<Vertex>::addVertexNeighbor(Vertex &v1, VertexIndex v2) {
+inline void Graph<VertexCollection, Vertex, Rest...>::addVertexNeighbor(Vertex &v1, VertexIndex v2) {
     v1.template addNeighbor<debug>(v2);
 }
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 template<auto debug>
-inline void Graph<Vertex>::removeVertexNeighbor(Vertex &v1, VertexIndex v2) {
+inline void Graph<VertexCollection, Vertex, Rest...>::removeVertexNeighbor(Vertex &v1, VertexIndex v2) {
     v1.template removeNeighbor<debug>(v2);
 }
 
-template<typename Vertex>
-inline bool Graph<Vertex>::isConnected() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline bool Graph<VertexCollection, Vertex, Rest...>::isConnected() const {
     if(_vertices.empty()) return true;
 
     std::vector<char> visited (_vertices.size(), false);
@@ -245,8 +245,8 @@ inline bool Graph<Vertex>::isConnected() const {
     return nVisited == _vertices.size();
 }
 
-template<typename Vertex>
-inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponents() {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::vector<Graph<VertexCollection, Vertex, Rest...>> Graph<VertexCollection, Vertex, Rest...>::connectedComponents() {
     std::vector<VertexList> subVertexLists {};
 
     {
@@ -322,21 +322,21 @@ inline std::vector<Graph<Vertex>> Graph<Vertex>::connectedComponents() {
     return std::move(subGraphs);
 }
 
-template<typename Vertex>
-inline void Graph<Vertex>::removeNeighborsEdges(VertexIndex ix) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline void Graph<VertexCollection, Vertex, Rest...>::removeNeighborsEdges(VertexIndex ix) {
     auto &vertex = _vertices.at(ix);
     std::for_each(std::begin(vertex.neighbors()), std::end(vertex.neighbors()), [this, ix](const auto neighbor) {
         removeVertexNeighbor(_vertices.at(neighbor), ix);
     });
 }
 
-template<typename Vertex>
-inline std::size_t Graph<Vertex>::nEdges() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::size_t Graph<VertexCollection, Vertex, Rest...>::nEdges() const {
     return edges().size();
 }
 
-template<typename Vertex>
-inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(const Graph &other) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::VertexIndex> Graph<VertexCollection, Vertex, Rest...>::append(const Graph &other) {
     std::vector<VertexIndex> indexMapping;
     indexMapping.resize(other.vertices().size());
     // insert vertices
@@ -369,22 +369,23 @@ inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(co
     return std::move(indexMapping);
 }
 
-template<typename Vertex>
-inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(const Graph<Vertex> &other,
-                                                                              VertexIndex edgeIndexThis,
-                                                                              VertexIndex edgeIndexOther) {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::VertexIndex> Graph<VertexCollection, Vertex, Rest...>::append(
+        const Graph &other,
+        VertexIndex edgeIndexThis,
+        VertexIndex edgeIndexOther) {
     auto mapping = append(other);
     addEdge(edgeIndexThis, mapping.at(edgeIndexOther));
     return std::move(mapping);
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::size_type Graph<Vertex>::nVertices() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::size_type Graph<VertexCollection, Vertex, Rest...>::nVertices() const {
     return _vertices.size_active();
 }
 
-template<typename Vertex>
-inline std::string Graph<Vertex>::gexf() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::string Graph<VertexCollection, Vertex, Rest...>::gexf() const {
     std::ostringstream ss;
     ss << R"(<?xml version="1.0" encoding="UTF-8"?>)";
     ss << R"(<gexf xmlns="http://www.gexf.net/1.2draft" version="1.2">)";
@@ -414,33 +415,33 @@ inline std::string Graph<Vertex>::gexf() const {
     return ss.str();
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::active_iterator Graph<Vertex>::begin() {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::active_iterator Graph<VertexCollection, Vertex, Rest...>::begin() {
     return _vertices.begin_active();
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::begin() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::const_active_iterator Graph<VertexCollection, Vertex, Rest...>::begin() const {
     return _vertices.cbegin_active();
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::cbegin() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::const_active_iterator Graph<VertexCollection, Vertex, Rest...>::cbegin() const {
     return _vertices.cbegin_active();
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::active_iterator Graph<Vertex>::end() {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::active_iterator Graph<VertexCollection, Vertex, Rest...>::end() {
     return _vertices.end_active();
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::end() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::const_active_iterator Graph<VertexCollection, Vertex, Rest...>::end() const {
     return _vertices.cend_active();
 }
 
-template<typename Vertex>
-inline typename Graph<Vertex>::VertexList::const_active_iterator Graph<Vertex>::cend() const {
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::const_active_iterator Graph<VertexCollection, Vertex, Rest...>::cend() const {
     return _vertices.cend_active();
 }
 

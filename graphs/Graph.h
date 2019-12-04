@@ -15,10 +15,10 @@
 
 namespace graphs {
 
-template<typename Vertex>
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 class Graph {
 public:
-    using VertexList = graphs::IndexPersistentVector<Vertex>;
+    using VertexList = VertexCollection<Vertex, Rest...>;
     using VertexIndex = typename VertexList::size_type;
 
     using Edge = std::tuple<VertexIndex, VertexIndex>;
@@ -102,7 +102,7 @@ public:
      * Returns the connected components in terms of a list of new graph objects
      * @return connected components
      */
-    std::vector<Graph<Vertex>> connectedComponents();
+    std::vector<Graph> connectedComponents();
 
     /**
      * Appends the graph `other` to this graph. No edge is introduced, this graph will have at least two connected

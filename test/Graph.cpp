@@ -161,7 +161,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
     }
 
     GIVEN("A graph with two vertices") {
-        graphs::Graph<graphs::Vertex<std::size_t>> graph;
+        graphs::Graph<graphs::IndexPersistentVector, graphs::Vertex<std::size_t>> graph;
         graph.addVertex(0);
         graph.addVertex(1);
         WHEN("connecting the two vertices") {
