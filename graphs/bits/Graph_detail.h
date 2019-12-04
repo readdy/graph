@@ -98,9 +98,15 @@ inline bool Graph<Vertex>::containsEdge(VertexIndex v1, VertexIndex v2) const {
 }
 
 template<typename Vertex>
-inline typename Graph<Vertex>::VertexIndex Graph<Vertex>::addVertex(typename Vertex::data_type data) {
-    auto it = _vertices.emplace_back(data);
-    return std::distance(_vertices.begin(), it);
+inline typename Graph<Vertex>::iterator Graph<Vertex>::addVertex(typename Vertex::data_type data) {
+    return _vertices.emplace_back(data);
+}
+
+template<typename Vertex>
+template<auto debug>
+inline void Graph<Vertex>::addEdge(iterator it1, iterator it2) {
+    addEdge(std::distance(_vertices.begin(), it1.inner_iterator()),
+            std::distance(_vertices.begin(), it2.inner_iterator()));
 }
 
 template<typename Vertex>
@@ -117,6 +123,12 @@ template<typename Vertex>
 template<auto debug>
 inline void Graph<Vertex>::addEdge(const Graph::Edge &edge) {
     addEdge<debug>(std::get<0>(edge), std::get<1>(edge));
+}
+
+template<typename Vertex>
+void Graph<Vertex>::removeEdge(iterator it1, iterator it2) {
+    removeEdge(std::distance(_vertices.begin(), it1.inner_iterator()),
+               std::distance(_vertices.begin(), it2.inner_iterator()));
 }
 
 template<typename Vertex>
@@ -139,6 +151,11 @@ inline void Graph<Vertex>::removeEdge(VertexIndex ix1, VertexIndex ix2) {
 template<typename Vertex>
 inline void Graph<Vertex>::removeEdge(const Graph::Edge &edge) {
     removeEdge(std::get<0>(edge), std::get<1>(edge));
+}
+
+template<typename Vertex>
+void Graph<Vertex>::removeVertex(Graph::iterator it) {
+    removeVertex(std::distance(_vertices.begin(), it));
 }
 
 template<typename Vertex>
@@ -327,8 +344,8 @@ inline std::vector<typename Graph<Vertex>::VertexIndex> Graph<Vertex>::append(co
         VertexIndex ix{0};
         for (const auto &v : other.vertices()) {
             if (!v.deactivated()) {
-                auto newIndex = addVertex(v.data());
-                indexMapping.at(ix) = newIndex;
+                auto positionPtr = addVertex(v.data());
+                indexMapping.at(ix) = positionPtr.persistent_index();
             }
             ++ix;
         }

@@ -46,7 +46,7 @@ TEST_CASE("IPV usage test", "[ipv]") {
     std::uniform_int_distribution<std::mt19937::result_type> dist(1, 600000);
 
     for(int i = 0; i < 10000; ++i) {
-        REQUIRE(elems.size() == v.size_active());
+        REQUIRE(elems.size() == v.size());
         if(randomBool()) {
             // add a random element
             auto n = dist(rng);
@@ -55,7 +55,7 @@ TEST_CASE("IPV usage test", "[ipv]") {
         } else {
             if(!elems.empty()) {
                 std::uniform_int_distribution<std::mt19937::result_type> draw(0, elems.size()-1);
-                auto it = v.begin_active() + draw(rng);
+                auto it = v.begin() + draw(rng);
                 auto val = it->val();
                 v.erase(it);
                 auto findit = std::find_if(elems.begin(), elems.end(), [val](auto a) { return a.val() == val; });
@@ -63,15 +63,15 @@ TEST_CASE("IPV usage test", "[ipv]") {
                 elems.erase(findit);
             }
         }
-        REQUIRE(v.size_active() == elems.size());
+        REQUIRE(v.size() == elems.size());
         for(auto a : elems) {
-            auto it = std::find(v.begin_active(), v.end_active(), a);
-            REQUIRE(it != v.end_active());
-            REQUIRE(it == (v.begin_active() + std::distance(v.begin_active(), it)));
-            REQUIRE(it == (v.end_active() - std::distance(it, v.end_active())));
+            auto it = std::find(v.begin(), v.end(), a);
+            REQUIRE(it != v.end());
+            REQUIRE(it == (v.begin() + std::distance(v.begin(), it)));
+            REQUIRE(it == (v.end() - std::distance(it, v.end())));
         }
-        for(auto it = v.begin_active(); it != v.end_active(); ++it) {
-            REQUIRE(std::find(elems.begin(), elems.end(), *it) != elems.end());
+        for(auto& vertex : v) {
+            REQUIRE(std::find(elems.begin(), elems.end(), vertex) != elems.end());
         }
     }
 }
@@ -85,188 +85,189 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
         v.push_back(A(8));
         v.push_back(A(3));
         THEN("The distance between active begin and active end is 5") {
-            REQUIRE(std::distance(v.begin_active(), v.end_active()) == 5);
+            REQUIRE(std::distance(v.begin(), v.end()) == 5);
         }
 
         WHEN("Removing element number 2") {
             v.erase(v.begin() + 2);
             THEN("The active size is 4") {
-                REQUIRE(std::distance(v.begin_active(), v.end_active()) == 4);
-                REQUIRE(v.size_active() == 4);
+                REQUIRE(std::distance(v.begin(), v.end()) == 4);
+                REQUIRE(v.size() == 4);
             }
             AND_THEN("the active iterator skips the element with number 7") {
                 WHEN("Accessing it through random access") {
                     std::vector<std::size_t> mapping{0, 1, 3, 4};
                     auto ix = 0;
-                    for (auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                    for (auto it = v.begin(); it != v.end(); ++it, ++ix) {
                         REQUIRE(it->val() == v.at(mapping[ix]).val());
                     }
                 }
                 WHEN("Accessing it through plus operator") {
-                    REQUIRE((*v.begin_active()).val() == 5);
-                    REQUIRE((*(v.begin_active() + 1)).val() == 1);
-                    REQUIRE((*(v.begin_active() + 2)).val() == 8);
-                    REQUIRE((*(v.begin_active() + 3)).val() == 3);
+                    REQUIRE((*v.begin()).val() == 5);
+                    REQUIRE((*(v.begin() + 1)).val() == 1);
+                    REQUIRE((*(v.begin() + 2)).val() == 8);
+                    REQUIRE((*(v.begin() + 3)).val() == 3);
                 }
                 WHEN("Accessing it through minus operator") {
-                    REQUIRE((v.end_active() - 1)->val() == 3);
-                    REQUIRE((v.end_active() - 2)->val() == 8);
-                    REQUIRE((v.end_active() - 3)->val() == 1);
-                    REQUIRE((v.end_active() - 4)->val() == 5);
+                    REQUIRE((v.end() - 1)->val() == 3);
+                    REQUIRE((v.end() - 2)->val() == 8);
+                    REQUIRE((v.end() - 3)->val() == 1);
+                    REQUIRE((v.end() - 4)->val() == 5);
                 }
                 WHEN("Accessing it through stepwise increase") {
-                    auto itBegin = v.begin_active();
+                    auto itBegin = v.begin();
                     REQUIRE((itBegin++)->val() == 5);
                     REQUIRE((itBegin++)->val() == 1);
                     REQUIRE((itBegin++)->val() == 8);
                     REQUIRE((itBegin++)->val() == 3);
-                    REQUIRE(itBegin == v.end_active());
+                    REQUIRE(itBegin == v.end());
                 }
                 WHEN("Accessing it through stepwise decrease") {
-                    auto itEnd = v.end_active();
+                    auto itEnd = v.end();
                     REQUIRE((--itEnd)->val() == 3);
                     REQUIRE((--itEnd)->val() == 8);
                     REQUIRE((--itEnd)->val() == 1);
                     REQUIRE((--itEnd)->val() == 5);
-                    REQUIRE(itEnd == v.begin_active());
+                    REQUIRE(itEnd == v.begin());
                 }
             }
             AND_WHEN("Removing element number 1") {
                 v.erase(v.begin() + 1);
                 THEN("The active size is 3") {
-                    REQUIRE(std::distance(v.begin_active(), v.end_active()) == 3);
-                    REQUIRE(v.size_active() == 3);
+                    REQUIRE(std::distance(v.begin(), v.end()) == 3);
+                    REQUIRE(v.size() == 3);
                 }
                 AND_THEN("the active iterator skips the elements with numbers 7, 1") {
                     WHEN("Accessing it through random access") {
                         std::vector<std::size_t> mapping{0, 3, 4};
                         auto ix = 0;
-                        for (auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                        for (auto it = v.begin(); it != v.end(); ++it, ++ix) {
                             REQUIRE(it->val() == v.at(mapping[ix]).val());
                         }
                     }
                     WHEN("Accessing it through plus operator") {
-                        REQUIRE((*v.begin_active()).val() == 5);
-                        REQUIRE((*(v.begin_active() + 1)).val() == 8);
-                        REQUIRE((*(v.begin_active() + 2)).val() == 3);
+                        REQUIRE((*v.begin()).val() == 5);
+                        REQUIRE((*(v.begin() + 1)).val() == 8);
+                        REQUIRE((*(v.begin() + 2)).val() == 3);
                     }
                     WHEN("Accessing it through minus operator") {
-                        REQUIRE((v.end_active() - 1)->val() == 3);
-                        REQUIRE((v.end_active() - 2)->val() == 8);
-                        REQUIRE((v.end_active() - 3)->val() == 5);
+                        REQUIRE((v.end() - 1)->val() == 3);
+                        REQUIRE((v.end() - 2)->val() == 8);
+                        REQUIRE((v.end() - 3)->val() == 5);
                     }
                     WHEN("Accessing it through stepwise increase") {
-                        auto it = v.begin_active();
+                        auto it = v.begin();
                         REQUIRE((it++)->val() == 5);
                         REQUIRE((it++)->val() == 8);
                         REQUIRE((it++)->val() == 3);
-                        REQUIRE(it == v.end_active());
+                        REQUIRE(it == v.end());
                     }
                     WHEN("Accessing it through stepwise decrease") {
-                        auto itEnd = v.end_active();
+                        auto itEnd = v.end();
                         REQUIRE((--itEnd)->val() == 3);
                         REQUIRE((--itEnd)->val() == 8);
                         REQUIRE((--itEnd)->val() == 5);
-                        REQUIRE(itEnd == v.begin_active());
+                        REQUIRE(itEnd == v.begin());
                     }
                 }
 
                 AND_WHEN("Removing element number 0") {
                     v.erase(v.begin());
                     THEN("The active size is 2") {
-                        REQUIRE(std::distance(v.begin_active(), v.end_active()) == 2);
-                        REQUIRE(v.size_active() == 2);
+                        REQUIRE(std::distance(v.begin(), v.end()) == 2);
+                        REQUIRE(v.size() == 2);
                     }
 
                     AND_THEN("the active iterator skips the elements with numbers 7, 1, 5") {
                         WHEN("Accessing it through random access") {
                             std::vector<std::size_t> mapping {3, 4};
                             auto ix = 0;
-                            for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                            for(auto it = v.begin(); it != v.end(); ++it, ++ix) {
                                 REQUIRE(it->val() == v.at(mapping[ix]).val());
                             }
                         }
                         WHEN("Accessing it through plus operator") {
-                            REQUIRE((*(v.begin_active() + 0)).val() == 8);
-                            REQUIRE((*(v.cbegin_active() + 0)).val() == 8);
-                            REQUIRE((*(v.begin_active() + 1)).val() == 3);
-                            REQUIRE((*(v.cbegin_active() + 1)).val() == 3);
+                            REQUIRE((*(v.begin() + 0)).val() == 8);
+                            REQUIRE((*(v.cbegin() + 0)).val() == 8);
+                            REQUIRE((*(v.begin() + 1)).val() == 3);
+                            REQUIRE((*(v.cbegin() + 1)).val() == 3);
                         }
                         WHEN("Accessing it through minus operator") {
-                            REQUIRE((v.end_active() - 1)->val() == 3);
-                            REQUIRE((v.cend_active() - 1)->val() == 3);
-                            REQUIRE((v.end_active() - 2)->val() == 8);
-                            REQUIRE((v.cend_active() - 2)->val() == 8);
+                            REQUIRE((v.end() - 1)->val() == 3);
+                            REQUIRE((v.cend() - 1)->val() == 3);
+                            REQUIRE((v.end() - 2)->val() == 8);
+                            REQUIRE((v.cend() - 2)->val() == 8);
                         }
                         WHEN("Accessing it through stepwise increase") {
-                            auto it = v.begin_active();
+                            auto it = v.begin();
                             REQUIRE((it++)->val() == 8);
                             REQUIRE((it++)->val() == 3);
-                            REQUIRE(it == v.end_active());
+                            REQUIRE(it == v.end());
+
+                            std::vector<int> vv;
+                            assert(vv.begin() == vv.cend());
                         }
                         WHEN("Accessing it through stepwise increase const") {
-                            auto it = v.cbegin_active();
+                            auto it = v.begin();
                             REQUIRE((it++)->val() == 8);
                             REQUIRE((it++)->val() == 3);
-                            REQUIRE(it == v.cend_active());
+                            REQUIRE(it == v.cend());
                         }
                         WHEN("Accessing it through stepwise decrease") {
-                            auto itEnd = v.end_active();
+                            auto itEnd = v.end();
                             REQUIRE((--itEnd)->val() == 3);
                             REQUIRE((--itEnd)->val() == 8);
-                            REQUIRE(itEnd == v.begin_active());
+                            REQUIRE(itEnd == v.begin());
                         }
                         WHEN("Accessing it through stepwise decrease const") {
-                            auto itEnd = v.cend_active();
+                            auto itEnd = v.cend();
                             REQUIRE((--itEnd)->val() == 3);
                             REQUIRE((--itEnd)->val() == 8);
-                            REQUIRE(itEnd == v.cbegin_active());
+                            REQUIRE(itEnd == v.cbegin());
                         }
                     }
 
                     AND_WHEN("Removing element 4") {
-                        v.erase(v.begin() + 4);
+                        v.erase(v.begin() + 1);
                         THEN("The active size is 1") {
-                            REQUIRE(std::distance(v.begin_active(), v.end_active()) == 1);
-                            REQUIRE(v.size_active() == 1);
+                            REQUIRE(std::distance(v.begin(), v.end()) == 1);
+                            REQUIRE(v.size() == 1);
                         }
                         AND_THEN("the active iterator skips the elements with numbers 7, 1, 5, 3") {
                             std::vector<std::size_t> mapping {3};
                             auto ix = 0;
-                            for(auto it = v.begin_active(); it != v.end_active(); ++it, ++ix) {
+                            for(auto it = v.begin(); it != v.end(); ++it, ++ix) {
                                 REQUIRE(it->val() == v.at(mapping[ix]).val());
                             }
-                            REQUIRE(((v.begin_active() + 0))->val() == 8);
-                            REQUIRE((v.end_active() - 1)->val() == 8);
-                            REQUIRE((--v.end_active())->val() == 8);
+                            REQUIRE(((v.begin() + 0))->val() == 8);
+                            REQUIRE((v.end() - 1)->val() == 8);
+                            REQUIRE((--v.end())->val() == 8);
                         }
 
                         AND_WHEN("Removing element 3") {
-                            v.erase(v.begin() + 3);
+                            v.erase(v.begin());
                             THEN("The vector is empty") {
-                                REQUIRE(v.empty_active());
-                                REQUIRE(v.size_active() == 0);
+                                REQUIRE(v.empty());
+                                REQUIRE(v.size() == 0);
                             }
                             AND_THEN("the active iterator skips all the elements") {
-                                REQUIRE(v.begin_active() == v.end_active());
+                                REQUIRE(v.begin() == v.end());
                             }
                         }
 
                         AND_WHEN("Adding a new element 100") {
                             v.push_back(A{100});
                             THEN("The active size is 2") {
-                                REQUIRE(v.size_active() == 2);
-                                REQUIRE(std::distance(v.begin_active(), v.end_active()) == 2);
+                                REQUIRE(v.size() == 2);
+                                REQUIRE(std::distance(v.begin(), v.end()) == 2);
                             }
                             AND_THEN("The vector contains {8, 100}") {
-                                auto it8 = std::find_if(v.begin_active(), v.end_active(),
-                                                        [](auto a) { return a.val() == 8; });
+                                auto it8 = std::find_if(v.begin(), v.end(), [](auto a) { return a.val() == 8; });
                                 REQUIRE(!it8->deactivated());
-                                REQUIRE(it8 != v.end_active());
-                                auto it100 = std::find_if(v.begin_active(), v.end_active(),
-                                                         [](auto a) { return a.val() == 100; });
+                                REQUIRE(it8 != v.end());
+                                auto it100 = std::find_if(v.begin(), v.end(), [](auto a) { return a.val() == 100; });
                                 REQUIRE(!it100->deactivated());
-                                REQUIRE(it100 != v.end_active());
+                                REQUIRE(it100 != v.end());
                             }
                         }
                     }

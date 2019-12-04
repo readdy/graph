@@ -26,6 +26,9 @@ public:
     using Path3 = std::tuple<VertexIndex, VertexIndex, VertexIndex>;
     using Path4 = std::tuple<VertexIndex, VertexIndex, VertexIndex, VertexIndex>;
 
+    using iterator = typename VertexList::active_iterator;
+    using const_iterator = typename VertexList::const_active_iterator;
+
     Graph();
 
     explicit Graph(VertexList vertexList);
@@ -40,13 +43,13 @@ public:
 
     Graph &operator=(Graph &&) = default;
 
-    typename VertexList::active_iterator begin();
-    typename VertexList::const_active_iterator begin() const;
-    typename VertexList::const_active_iterator cbegin() const;
+    iterator begin();
+    const_iterator begin() const;
+    const_iterator cbegin() const;
 
-    typename VertexList::active_iterator end();
-    typename VertexList::const_active_iterator end() const;
-    typename VertexList::const_active_iterator cend() const;
+    iterator end();
+    const_iterator end() const;
+    const_iterator cend() const;
 
     const VertexList &vertices() const;
 
@@ -58,7 +61,10 @@ public:
 
     bool containsEdge(VertexIndex v1, VertexIndex v2) const;
 
-    VertexIndex addVertex(typename Vertex::data_type data = {});
+    iterator addVertex(typename Vertex::data_type data = {});
+
+    template<auto debug = nullptr>
+    void addEdge(iterator it1, iterator it2);
 
     template<auto debug = nullptr>
     void addEdge(VertexIndex ix1, VertexIndex ix2);
@@ -66,9 +72,13 @@ public:
     template<auto debug = nullptr>
     void addEdge(const Edge &edge);
 
+    void removeEdge(iterator it1, iterator it2);
+
     void removeEdge(VertexIndex ix1, VertexIndex ix2);
 
     void removeEdge(const Edge &edge);
+
+    void removeVertex(iterator it);
 
     void removeVertex(VertexIndex ix);
 

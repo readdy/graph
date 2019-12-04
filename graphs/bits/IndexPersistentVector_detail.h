@@ -23,6 +23,18 @@ template<typename T>
 struct can_query_active<T, std::void_t<decltype(std::declval<T>().deactivated())>> : std::true_type {
 };
 
+template<typename IteratorL, typename IteratorR>
+bool operator==(const IteratorL& lhs, const IteratorR& rhs) { return lhs.inner_iterator() == rhs.inner_iterator(); }
+template<typename IteratorL, typename IteratorR>
+bool operator!=(const IteratorL& lhs, const IteratorR& rhs) { return lhs.inner_iterator() != rhs.inner_iterator(); }
+template<typename IteratorL, typename IteratorR>
+bool operator<(const IteratorL& lhs, const IteratorR& rhs) { return lhs.inner_iterator() < rhs.inner_iterator(); }
+template<typename IteratorL, typename IteratorR>
+bool operator>(const IteratorL& lhs, const IteratorR& rhs) { return lhs.inner_iterator() > rhs.inner_iterator(); }
+template<typename IteratorL, typename IteratorR>
+bool operator<=(const IteratorL& lhs, const IteratorR& rhs) { return lhs.inner_iterator() <= rhs.inner_iterator(); }
+template<typename IteratorL, typename IteratorR>
+bool operator>=(const IteratorL& lhs, const IteratorR& rhs) { return lhs.inner_iterator() >= rhs.inner_iterator(); }
 
 
 template<template<typename...> class BackingVector, typename T, typename... Rest>
@@ -56,155 +68,23 @@ public:
     /**
      * the iterator type, same as backing vector's iterator
      */
-    using iterator = typename BackingVector<T, Rest...>::iterator;
+    using raw_iterator = typename BackingVector<T, Rest...>::iterator;
     /**
      * the const iterator type, same as backing vector's const iterator
      */
-    using const_iterator = typename BackingVector<T, Rest...>::const_iterator;
-    /**
-     * the reverse iterator type, same as backing vector's reverse iterator
-     */
-    using reverse_iterator = typename BackingVector<T, Rest...>::reverse_iterator;
-    /**
-     * the const reverse iterator type, same as backing vector's const reverse iterator
-     */
-    using const_reverse_iterator = typename BackingVector<T, Rest...>::const_reverse_iterator;
-
-    class active_iterator {
-    public:
-        using difference_type = typename iterator::difference_type;
-        using value_type = typename iterator::value_type;
-        using reference = typename iterator::reference;
-        using pointer = typename iterator::pointer;
-        using iterator_category = typename iterator::iterator_category;
-
-        active_iterator() : parent(), begin(), end(), blanksPtr() {}
-        active_iterator(iterator parent, iterator begin, iterator end, BlanksList* blanksPtr)
-            : parent(parent), begin(begin), end(end), blanksPtr(blanksPtr) {
-            skipBlanks();
-        }
-
-        bool operator==(const active_iterator& other) const { return parent == other.parent; }
-        bool operator!=(const active_iterator& other) const { return parent != other.parent; }
-        bool operator<(const active_iterator& other) const { return parent < other.parent; }
-        bool operator>(const active_iterator& other) const { return parent > other.parent; }
-        bool operator<=(const active_iterator& other) const { return parent <= other.parent; }
-        bool operator>=(const active_iterator& other) const { return parent >= other.parent; }
-
-        reference operator*() const { return *parent; }
-        pointer operator->() const { return parent.operator->(); }
-        reference operator[](size_type i) const {
-            return *(operator+(i));
-        }
-
-        active_iterator& operator++() {
-            if(parent != end) {
-                ++parent;
-                skipBlanks();
-            }
-            return *this;
-        }
-
-        active_iterator operator++(int) {
-            active_iterator copy(*this);
-            ++(*this);
-            return copy;
-        }
-        active_iterator& operator--() {
-            --parent;
-            while(parent >= begin && parent->deactivated()) {
-                --parent;
-            }
-            return *this;
-        }
-        active_iterator operator--(int) {
-            iterator copy(*this);
-            --(*this);
-            return copy;
-        }
-
-        active_iterator& operator+=(size_type n) {
-            auto pos = std::distance(begin, parent);
-            auto targetPos = pos + n;
-            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
-            while(it != blanksPtr->end() && *it <= targetPos) {
-                ++targetPos;
-                ++it;
-            }
-            parent += targetPos - pos;
-            return *this;
-        }
-
-        active_iterator operator+(size_type n) const {
-            active_iterator copy(*this);
-            copy += n;
-            return copy;
-        }
-
-        friend active_iterator operator+(size_type n, const active_iterator& it) {
-            return it + n;
-        }
-
-        active_iterator& operator-=(size_type n) {
-            auto pos = std::distance(begin, parent);
-            auto targetPos = pos - n;
-            auto it = std::lower_bound(blanksPtr->rbegin(), blanksPtr->rend(), pos, std::greater<>());
-            while (it != blanksPtr->rend() && *it >= targetPos) {
-                --targetPos;
-                ++it;
-            }
-            parent -= pos - targetPos;
-            return *this;
-        }
-
-        active_iterator operator-(size_type n) const {
-            active_iterator copy (*this);
-            copy -= n;
-            return copy;
-        }
-
-        difference_type operator-(active_iterator rhs) const {
-            auto dist = parent - rhs.parent;
-            // find number of blanks in that range
-            auto pos = std::distance(begin, parent);
-            auto rhsPos = std::distance(begin, rhs.parent);
-            auto nBlanksThis = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos));
-            auto nBlanksThat = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), rhsPos));
-            return dist - (nBlanksThis - nBlanksThat);
-        }
-
-        auto inner_iterator() const {
-            return parent;
-        }
-
-    private:
-        void skipBlanks() {
-            auto pos = std::distance(begin, parent);
-            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
-            while(it != blanksPtr->end() && parent != end && pos == *it) {
-                ++parent;
-                ++pos;
-                ++it;
-            }
-        }
-
-        iterator parent;
-        iterator begin;
-        iterator end;
-        const BlanksList *blanksPtr;
-    };
+    using const_raw_iterator = typename BackingVector<T, Rest...>::const_iterator;
 
     class const_active_iterator {
     public:
-        using difference_type = typename const_iterator::difference_type;
-        using value_type = typename const_iterator::value_type;
-        using reference = typename const_iterator::reference;
-        using pointer = typename const_iterator::pointer;
-        using iterator_category = typename const_iterator::iterator_category;
+        using difference_type = typename const_raw_iterator::difference_type;
+        using value_type = typename const_raw_iterator::value_type;
+        using reference = typename const_raw_iterator::reference;
+        using pointer = typename const_raw_iterator::pointer;
+        using iterator_category = typename const_raw_iterator::iterator_category;
 
         const_active_iterator() : parent(), begin(), end(), blanksPtr() {}
 
-        const_active_iterator(const_iterator parent, const_iterator begin, const_iterator end, const BlanksList *blanksPtr)
+        const_active_iterator(const_raw_iterator parent, const_raw_iterator begin, const_raw_iterator end, const BlanksList *blanksPtr)
                 : parent(parent), begin(begin), end(end), blanksPtr(blanksPtr) {
             skipBlanks();
         }
@@ -310,6 +190,15 @@ public:
         reference operator[](size_type n) const {
             return *(operator+(n));
         }
+
+        [[nodiscard]] size_type persistent_index() const {
+            return std::distance(begin, parent);
+        }
+
+        const_raw_iterator inner_iterator() const {
+            return parent;
+        }
+
     private:
         void skipBlanks() {
             auto pos = std::distance(begin, parent);
@@ -321,11 +210,148 @@ public:
             }
         }
 
-        const_iterator parent;
-        const_iterator begin;
-        const_iterator end;
+        const_raw_iterator parent;
+        const_raw_iterator begin;
+        const_raw_iterator end;
         const BlanksList *blanksPtr;
     };
+
+    class active_iterator {
+    public:
+        using difference_type = typename raw_iterator::difference_type;
+        using value_type = typename raw_iterator::value_type;
+        using reference = typename raw_iterator::reference;
+        using pointer = typename raw_iterator::pointer;
+        using iterator_category = typename raw_iterator::iterator_category;
+
+        active_iterator() : parent(), begin(), end(), blanksPtr() {}
+        active_iterator(raw_iterator parent, raw_iterator begin, raw_iterator end, BlanksList* blanksPtr)
+                : parent(parent), begin(begin), end(end), blanksPtr(blanksPtr) {
+            skipBlanks();
+        }
+
+        reference operator*() const { return *parent; }
+        pointer operator->() const { return parent.operator->(); }
+        reference operator[](size_type i) const {
+            return *(operator+(i));
+        }
+
+        active_iterator& operator++() {
+            if(parent != end) {
+                ++parent;
+                skipBlanks();
+            }
+            return *this;
+        }
+
+        active_iterator operator++(int) {
+            active_iterator copy(*this);
+            ++(*this);
+            return copy;
+        }
+        active_iterator& operator--() {
+            --parent;
+            while(parent >= begin && parent->deactivated()) {
+                --parent;
+            }
+            return *this;
+        }
+        active_iterator operator--(int) {
+            active_iterator copy(*this);
+            --(*this);
+            return copy;
+        }
+
+        active_iterator& operator+=(size_type n) {
+            auto pos = std::distance(begin, parent);
+            auto targetPos = pos + n;
+            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+            while(it != blanksPtr->end() && *it <= targetPos) {
+                ++targetPos;
+                ++it;
+            }
+            parent += targetPos - pos;
+            return *this;
+        }
+
+        active_iterator operator+(size_type n) const {
+            active_iterator copy(*this);
+            copy += n;
+            return copy;
+        }
+
+        friend active_iterator operator+(size_type n, const active_iterator& it) {
+            return it + n;
+        }
+
+        active_iterator& operator-=(size_type n) {
+            auto pos = std::distance(begin, parent);
+            auto targetPos = pos - n;
+            auto it = std::lower_bound(blanksPtr->rbegin(), blanksPtr->rend(), pos, std::greater<>());
+            while (it != blanksPtr->rend() && *it >= targetPos) {
+                --targetPos;
+                ++it;
+            }
+            parent -= pos - targetPos;
+            return *this;
+        }
+
+        active_iterator operator-(size_type n) const {
+            active_iterator copy (*this);
+            copy -= n;
+            return copy;
+        }
+
+        difference_type operator-(active_iterator rhs) const {
+            auto dist = parent - rhs.parent;
+            // find number of blanks in that range
+            auto pos = std::distance(begin, parent);
+            auto rhsPos = std::distance(begin, rhs.parent);
+            auto nBlanksThis = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos));
+            auto nBlanksThat = std::distance(blanksPtr->begin(), std::lower_bound(blanksPtr->begin(), blanksPtr->end(), rhsPos));
+            return dist - (nBlanksThis - nBlanksThat);
+        }
+
+        auto inner_iterator() const {
+            return parent;
+        }
+
+        [[nodiscard]] size_type persistent_index() const {
+            return std::distance(begin, parent);
+        }
+
+        operator const_active_iterator() const {
+            return {parent, begin, end, blanksPtr};
+        }
+
+    private:
+        void skipBlanks() {
+            auto pos = std::distance(begin, parent);
+            auto it = std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos);
+            while(it != blanksPtr->end() && parent != end && pos == *it) {
+                ++parent;
+                ++pos;
+                ++it;
+            }
+        }
+
+        raw_iterator parent;
+        raw_iterator begin;
+        raw_iterator end;
+        const BlanksList *blanksPtr;
+    };
+
+    using iterator = active_iterator;
+    using const_iterator = const_active_iterator;
+    /**
+     * the reverse iterator type, same as backing vector's reverse iterator
+     */
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    /**
+     * the const reverse iterator type, same as backing vector's const reverse iterator
+     */
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
 
     /**
      * gives access to the backing vector
@@ -347,7 +373,7 @@ public:
      * the size of this container, including blanks
      * @return the size
      */
-    [[nodiscard]] size_type size() const {
+    [[nodiscard]] size_type size_raw() const {
         return _backingVector.size();
     }
 
@@ -355,11 +381,11 @@ public:
      * returns whether the container is empty
      * @return true if it is empty, false otherwise
      */
-    [[nodiscard]] bool empty() const {
+    [[nodiscard]] bool empty_raw() const {
         return _backingVector.empty();
     }
 
-    [[nodiscard]] bool empty_active() const {
+    [[nodiscard]] bool empty() const {
         return _backingVector.size() == _blanks.size();
     }
 
@@ -380,12 +406,12 @@ public:
     iterator push_back(T &&val) {
         if (_blanks.empty()) {
             _backingVector.push_back(std::forward<T>(val));
-            return std::prev(_backingVector.end());
+            return iterator(std::prev(_backingVector.end()), _backingVector.begin(), _backingVector.end(), &_blanks);
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backingVector.at(idx) = std::move(val);
-            return _backingVector.begin() + idx;
+            return {_backingVector.begin() + idx, std::begin(_backingVector), std::end(_backingVector), &_blanks};
         }
     }
 
@@ -397,12 +423,12 @@ public:
     iterator push_back(const T &val) {
         if (_blanks.empty()) {
             _backingVector.push_back(val);
-            return std::prev(_backingVector.end());
+            return {std::prev(_backingVector.end()), _backingVector.begin(), _backingVector.end(), &_blanks};
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backingVector.at(idx) = val;
-            return _backingVector.begin() + idx;
+            return {_backingVector.begin() + idx, _backingVector.begin(), _backingVector.end(), &_blanks};
         }
     }
 
@@ -416,26 +442,18 @@ public:
     iterator emplace_back(Args &&... args) {
         if (_blanks.empty()) {
             _backingVector.emplace_back(std::forward<Args>(args)...);
-            return std::prev(_backingVector.end());
+            return {std::prev(_backingVector.end()), _backingVector.begin(), _backingVector.end(), &_blanks};
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backingVector.get_allocator().construct(&*_backingVector.begin() + idx, std::forward<Args>(args)...);
-            return _backingVector.begin() + idx;
+            return {_backingVector.begin() + idx, _backingVector.begin(), _backingVector.end(), &_blanks};
         }
     }
 
-    /**
-     * Removes an element by deactivating it and pushing the index to the blanks stack.
-     * @param pos an iterator pointing to the element that should be erased
-     */
     void erase(iterator pos) {
         deactivate(pos);
-        insertBlank(std::distance(_backingVector.begin(), pos));
-    }
-
-    void erase(active_iterator pos) {
-        erase(pos.inner_iterator());
+        insertBlank(pos.persistent_index());
     }
 
     /**
@@ -443,7 +461,7 @@ public:
      * @param start begin of the range, inclusive
      * @param end end of the range, exclusive
      */
-    void erase(iterator start, const_iterator end) {
+    void erase_raw(raw_iterator start, const_raw_iterator end) {
         auto offset = start - _backingVector.begin();
         for (auto it = start; it != end; ++it, ++offset) {
             deactivate(it);
@@ -451,10 +469,10 @@ public:
         }
     }
 
-    void erase(active_iterator start, const_active_iterator end) {
+    void erase(iterator start, const_iterator end) {
         for(auto it = start; it != end; ++it) {
             deactivate(it);
-            insertBlank(std::distance(_backingVector.begin(), it.inner_iterator()));
+            insertBlank(it.persistent_index());
         }
     }
 
@@ -471,7 +489,7 @@ public:
      * The effective size of this container
      * @return the effective size
      */
-    [[nodiscard]] size_type size_active() const {
+    [[nodiscard]] size_type size() const {
         return _backingVector.size() - n_deactivated();
     }
 
@@ -505,19 +523,19 @@ public:
      * Yields an iterator pointing to the begin of this container.
      * @return the iterator
      */
-    iterator begin() noexcept {
+    raw_iterator begin_raw() noexcept {
         return _backingVector.begin();
     }
 
-    active_iterator begin_active() noexcept {
+    iterator begin() noexcept {
         return {_backingVector.begin(), _backingVector.begin(), _backingVector.end(), &_blanks};
     }
 
-    const_active_iterator begin_active() const noexcept {
-        return cbegin_active();
+    const_iterator begin() const noexcept {
+        return cbegin();
     }
 
-    const_active_iterator cbegin_active() const noexcept {
+    const_iterator cbegin() const noexcept {
         return {_backingVector.cbegin(), _backingVector.cbegin(), _backingVector.cend(), &_blanks};
     }
 
@@ -525,19 +543,19 @@ public:
      * Yields an iterator pointing to the end of this container.
      * @return the iterator
      */
-    iterator end() noexcept {
+    raw_iterator end_raw() noexcept {
         return _backingVector.end();
     }
 
-    active_iterator end_active() noexcept {
+    iterator end() noexcept {
         return {_backingVector.end(), _backingVector.begin(), _backingVector.end(), &_blanks};
     }
 
-    const_active_iterator end_active() const noexcept {
-        return cend_active();
+    const_iterator end() const noexcept {
+        return cend();
     }
 
-    const_active_iterator cend_active() const noexcept {
+    const_iterator cend() const noexcept {
         return {_backingVector.end(), _backingVector.begin(), _backingVector.end(), &_blanks};
     }
 
@@ -545,7 +563,7 @@ public:
      * Yields a const iterator pointing to the begin of this container.
      * @return the iterator
      */
-    const_iterator begin() const noexcept {
+    const_raw_iterator begin_raw() const noexcept {
         return _backingVector.begin();
     }
 
@@ -553,7 +571,7 @@ public:
      * Yields a const iterator pointing to the begin of this container.
      * @return the iterator
      */
-    const_iterator cbegin() const noexcept {
+    const_raw_iterator cbegin_raw() const noexcept {
         return _backingVector.cbegin();
     }
 
@@ -561,7 +579,7 @@ public:
      * Yields a const iterator pointing to the end of this container.
      * @return the iterator
      */
-    const_iterator end() const noexcept {
+    const_iterator end_raw() const noexcept {
         return _backingVector.end();
     }
 
@@ -569,7 +587,7 @@ public:
      * Yields a const iterator pointing to the end of this container.
      * @return the iterator
      */
-    const_iterator cend() const noexcept {
+    const_iterator cend_raw() const noexcept {
         return _backingVector.cend();
     }
 
@@ -621,14 +639,22 @@ public:
         return _backingVector.crend();
     }
 
+    active_iterator raw_to_active_iterator(iterator it) {
+        return active_iterator(it, std::begin(_backingVector), std::end(_backingVector), &_blanks);
+    }
+
+    const_active_iterator raw_to_active_iterator(const_iterator it) const {
+        return cto_active_iterator(it);
+    }
+
+    const_active_iterator craw_to_active_iterator(const_iterator it) const {
+        return const_active_iterator(it, std::begin(_backingVector), std::end(_backingVector), &_blanks);
+    }
+
 private:
 
     void deactivate(iterator it) {
         it->deactivate();
-    }
-
-    void deactivate(active_iterator it) {
-        deactivate(it.inner_iterator());
     }
 
     void insertBlank(typename BlanksList::value_type val) {
