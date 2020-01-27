@@ -412,7 +412,7 @@ inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Persistent
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline typename Graph<VertexCollection, Vertex, Rest...>::VertexList::size_type Graph<VertexCollection, Vertex, Rest...>::nVertices() const {
-    return _vertices.size_active();
+    return _vertices.size();
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
