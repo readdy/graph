@@ -45,29 +45,19 @@ inline void Vertex<T...>::setData(data_type data) {
 }
 
 template<typename... T>
-template<auto debug>
-inline void Vertex<T...>::addNeighbor(size_type neighbor) {
-    auto newNeighbor = std::find(_neighbors.begin(), _neighbors.end(), neighbor) == _neighbors.end();
+inline void Vertex<T...>::addNeighbor(NeighborList::value_type neighbor) {
+    auto neighborIt = std::find(_neighbors.begin(), _neighbors.end(), neighbor);
+    auto newNeighbor = neighborIt == _neighbors.end();
     if(newNeighbor) {
         _neighbors.push_back(neighbor);
-    }
-    if constexpr (debug != nullptr) {
-        if(!newNeighbor) {
-            (*debug)(fmt::format("tried to add an already existing edge ({} - {})", _data, neighbor->_data));
-        }
     }
 }
 
 template<typename... T>
-template<auto debug>
-inline void Vertex<T...>::removeNeighbor(size_type neighbor) {
+inline void Vertex<T...>::removeNeighbor(NeighborList::value_type neighbor) {
     auto it = std::find(_neighbors.begin(), _neighbors.end(), neighbor);
     if (it != _neighbors.end()) {
         _neighbors.erase(it);
-    } else {
-        if constexpr (debug != nullptr) {
-            (*debug)(fmt::format("tried to remove a non existing edge {} - {}", _data, neighbor->_data));
-        }
     }
 }
 

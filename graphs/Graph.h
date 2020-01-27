@@ -18,16 +18,22 @@ namespace graphs {
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 class Graph {
 public:
+
     using VertexList = VertexCollection<Vertex, Rest...>;
-    using VertexIndex = typename VertexList::size_type;
+    // this points a contiguous list with automatic jumps over the blanks, i.e., behaves like an ordinary vector
+    // the index invalidates as soon as vertices are removed, therefore should not be stored but only used
+    // instantaneously
+    using ActiveVertexIndex = typename VertexList::size_type;
+    // persistent index, never invalidates (unless pointed-to vertex is removed)
+    using PersistentVertexIndex = typename VertexList::persistent_index_t;
 
-    using Edge = std::tuple<VertexIndex, VertexIndex>;
+    using Edge = std::tuple<PersistentVertexIndex, PersistentVertexIndex>;
     using Path2 = Edge;
-    using Path3 = std::tuple<VertexIndex, VertexIndex, VertexIndex>;
-    using Path4 = std::tuple<VertexIndex, VertexIndex, VertexIndex, VertexIndex>;
+    using Path3 = std::tuple<PersistentVertexIndex, PersistentVertexIndex, PersistentVertexIndex>;
+    using Path4 = std::tuple<PersistentVertexIndex, PersistentVertexIndex, PersistentVertexIndex, PersistentVertexIndex>;
 
-    using iterator = typename VertexList::active_iterator;
-    using const_iterator = typename VertexList::const_active_iterator;
+    using iterator = typename VertexList::iterator;
+    using const_iterator = typename VertexList::const_iterator;
 
     Graph();
 
@@ -59,28 +65,33 @@ public:
 
     bool containsEdge(const Edge &edge) const;
 
-    bool containsEdge(VertexIndex v1, VertexIndex v2) const;
+    bool containsEdge(PersistentVertexIndex v1, PersistentVertexIndex v2) const;
+
+    bool containsEdge(ActiveVertexIndex v1, ActiveVertexIndex v2) const;
 
     iterator addVertex(typename Vertex::data_type data = {});
 
-    template<auto debug = nullptr>
     void addEdge(iterator it1, iterator it2);
 
-    template<auto debug = nullptr>
-    void addEdge(VertexIndex ix1, VertexIndex ix2);
+    void addEdge(PersistentVertexIndex ix1, PersistentVertexIndex ix2);
 
-    template<auto debug = nullptr>
+    void addEdge(ActiveVertexIndex ix1, ActiveVertexIndex ix2);
+
     void addEdge(const Edge &edge);
 
     void removeEdge(iterator it1, iterator it2);
 
-    void removeEdge(VertexIndex ix1, VertexIndex ix2);
+    void removeEdge(ActiveVertexIndex ix1, ActiveVertexIndex ix2);
+
+    void removeEdge(PersistentVertexIndex ix1, PersistentVertexIndex ix2);
 
     void removeEdge(const Edge &edge);
 
     void removeVertex(iterator it);
 
-    void removeVertex(VertexIndex ix);
+    void removeVertex(ActiveVertexIndex ix);
+
+    void removeVertex(PersistentVertexIndex ix);
 
     bool isConnected() const;
 
@@ -111,7 +122,7 @@ public:
      * @param other the other graph
      * @return index mapping
      */
-    std::vector<VertexIndex> append(const Graph &other);
+    std::vector<PersistentVertexIndex> append(const Graph &other);
 
     /**
      * Appends other graph to this one and introduces an edge connecting the two.
@@ -120,7 +131,8 @@ public:
      * @param edgeIndexOther index pointing to a live vertex in the other graph
      * @return index mapping
      */
-    std::vector<VertexIndex> append(const Graph &other, VertexIndex edgeIndexThis, VertexIndex edgeIndexOther);
+    std::vector<PersistentVertexIndex> append(const Graph &other, PersistentVertexIndex edgeIndexThis, PersistentVertexIndex edgeIndexOther);
+    std::vector<PersistentVertexIndex> append(const Graph &other, ActiveVertexIndex edgeIndexThis, ActiveVertexIndex edgeIndexOther);
 
     std::string gexf() const;
 
@@ -128,7 +140,7 @@ private:
     VertexList _vertices{};
     std::vector<Edge> _edges {};
 
-    void removeNeighborsEdges(VertexIndex ix);
+    void removeNeighborsEdges(PersistentVertexIndex ix);
 
     /**
      * this has always to be called for both v1 and v2 (symmetric neighborship)
@@ -136,8 +148,7 @@ private:
      * @param v1
      * @param v2
      */
-    template<auto debug = nullptr>
-    void addVertexNeighbor(Vertex& v1, VertexIndex v2);
+    void addVertexNeighbor(Vertex& v1, PersistentVertexIndex v2);
 
     /**
      * this has always to be called for both v1 and v2 (symmetric neighborship)
@@ -145,8 +156,7 @@ private:
      * @param v1
      * @param v2
      */
-    template<auto debug = nullptr>
-    void removeVertexNeighbor(Vertex& v1, VertexIndex v2);
+    void removeVertexNeighbor(Vertex& v1, PersistentVertexIndex v2);
 
 };
 

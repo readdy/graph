@@ -16,6 +16,8 @@
 
 namespace graphs {
 
+struct PersistentIndex;
+
 template<typename T>
 using IndexPersistentVector = detail::IndexPersistentContainer<std::vector, T>;
 

@@ -99,7 +99,7 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                     std::vector<std::size_t> mapping{0, 1, 3, 4};
                     auto ix = 0;
                     for (auto it = v.begin(); it != v.end(); ++it, ++ix) {
-                        REQUIRE(it->val() == v.at(mapping[ix]).val());
+                        REQUIRE(it->val() == v.at(ix).val());
                     }
                 }
                 WHEN("Accessing it through plus operator") {
@@ -142,7 +142,7 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                         std::vector<std::size_t> mapping{0, 3, 4};
                         auto ix = 0;
                         for (auto it = v.begin(); it != v.end(); ++it, ++ix) {
-                            REQUIRE(it->val() == v.at(mapping[ix]).val());
+                            REQUIRE(it->val() == v.at(ix).val());
                         }
                     }
                     WHEN("Accessing it through plus operator") {
@@ -183,7 +183,7 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                             std::vector<std::size_t> mapping {3, 4};
                             auto ix = 0;
                             for(auto it = v.begin(); it != v.end(); ++it, ++ix) {
-                                REQUIRE(it->val() == v.at(mapping[ix]).val());
+                                REQUIRE(it->val() == v.at(ix).val());
                             }
                         }
                         WHEN("Accessing it through plus operator") {
@@ -237,7 +237,7 @@ SCENARIO("Test ipv active iterator", "[ipv]") {
                             std::vector<std::size_t> mapping {3};
                             auto ix = 0;
                             for(auto it = v.begin(); it != v.end(); ++it, ++ix) {
-                                REQUIRE(it->val() == v.at(mapping[ix]).val());
+                                REQUIRE(it->val() == v.at(ix).val());
                             }
                             REQUIRE(((v.begin() + 0))->val() == 8);
                             REQUIRE((v.end() - 1)->val() == 8);

@@ -35,32 +35,32 @@ TEST_CASE("Test Vertex class", "[vertex]") {
         REQUIRE(vertex.neighbors().empty());
         
         WHEN("adding a neighbor") {
-            vertex.addNeighbor(1);
+            vertex.addNeighbor(graphs::PersistentIndex{1});
             THEN("the number of neighbors increases") {
                 REQUIRE(vertex.neighbors().size() == 1);
-                REQUIRE(vertex.neighbors().front() == 1);
+                REQUIRE(vertex.neighbors().front() == graphs::PersistentIndex{1});
             }
             WHEN("adding that neighbor again") {
-                vertex.addNeighbor(1);
+                vertex.addNeighbor(graphs::PersistentIndex{1});
                 THEN("the number of neighbors does not increase") {
                     REQUIRE(vertex.neighbors().size() == 1);
-                    REQUIRE(vertex.neighbors().front() == 1);
+                    REQUIRE(vertex.neighbors().front() == graphs::PersistentIndex{1});
                 }
             }
 
             WHEN("adding a second neighbor") {
-                vertex.addNeighbor(2);
+                vertex.addNeighbor(graphs::PersistentIndex{2});
                 THEN("the number of neighbors is 2") {
                     REQUIRE(vertex.neighbors().size() == 2);
                 }
                 WHEN("removing the first neighbor") {
-                    vertex.removeNeighbor(1);
+                    vertex.removeNeighbor(graphs::PersistentIndex{1});
                     THEN("only the second neighbor remains, now index 1") {
                         REQUIRE(vertex.neighbors().size() == 1);
-                        REQUIRE(vertex.neighbors().front() == 2);
+                        REQUIRE(vertex.neighbors().front() == graphs::PersistentIndex{2});
                     }
                     WHEN("also removing the second neighbor") {
-                        vertex.removeNeighbor(2);
+                        vertex.removeNeighbor(graphs::PersistentIndex{2});
                         THEN("no neighbors remain") {
                             REQUIRE(vertex.neighbors().empty());
                         }

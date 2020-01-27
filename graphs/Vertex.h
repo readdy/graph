@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include <fmt/format.h>
+#include "IndexPersistentVector.h"
 
 namespace graphs {
 
@@ -17,8 +18,8 @@ template<typename... T>
 class Vertex {
 public:
     using data_type = std::tuple<T...>;
+    using NeighborList = std::vector<PersistentIndex>;
     using size_type = typename std::vector<Vertex<T...>>::size_type;
-    using NeighborList = std::vector<size_type>;
 
     Vertex(T&&... data);
 
@@ -41,11 +42,9 @@ public:
 
     NeighborList &neighbors();
 
-    template<auto debug=nullptr>
-    void addNeighbor(size_type neighbor);
+    void addNeighbor(NeighborList::value_type neighbor);
 
-    template<auto debug=nullptr>
-    void removeNeighbor(size_type neighbor);
+    void removeNeighbor(NeighborList::value_type neighbor);
 
     const auto &data() const;
 

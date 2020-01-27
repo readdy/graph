@@ -25,6 +25,26 @@ auto reverse(T t) {
     return reverse_impl(std::forward<T>(t), std::make_index_sequence<std::tuple_size<T>::value>());
 }
 
+template<typename T, size_t... I>
+auto to_persistent_ix_impl(T t, std::index_sequence<I...>) {
+    return std::make_tuple(graphs::PersistentIndex{static_cast<std::size_t>(std::get<I>(std::forward<T>(t)))}...);
+}
+
+template<typename T>
+auto to_persistent_ix(T t) {
+    return to_persistent_ix_impl(std::forward<T>(t), std::make_index_sequence<std::tuple_size<T>::value>());
+}
+
+template<typename T, size_t... I>
+auto to_active_ix_impl(T t, std::index_sequence<I...>) {
+    return std::make_tuple(std::get<I>(std::forward<T>(t)).value...);
+}
+
+template<typename T>
+auto to_active_ix(T t) {
+    return to_active_ix_impl(std::forward<T>(t), std::make_index_sequence<std::tuple_size<T>::value>());
+}
+
 std::size_t n_choose_k(std::size_t n, std::size_t k) {
     if(k == 0 || k == n) return 1;
     return n_choose_k(n - 1, k - 1) + n_choose_k(n - 1, k);
@@ -35,7 +55,9 @@ std::size_t nTupleOccurrences(const std::vector<T1> &v, const T2 &t) {
     std::size_t n = 0;
     auto tReverse = reverse<T2>(t);
     for(auto it = std::begin(v); it != std::end(v); ++it) {
-        if(*it == t || *it == tReverse) ++n;
+        if(*it == t || *it == tReverse) {
+            ++n;
+        }
     }
     return n;
 }
@@ -104,7 +126,8 @@ void testFullyConnected() {
             REQUIRE(pairs.size() == static_cast<std::size_t>(K * (K - 1) / 2));
             for(std::size_t i = 0; i < graph.vertices().size(); ++i) {
                 for (std::size_t j = i+1; j < graph.vertices().size(); ++j) {
-                    REQUIRE(containsTupleXOR(pairs, std::make_tuple(i, j)));
+                    REQUIRE(containsTupleXOR(pairs, std::make_tuple(graphs::DefaultGraph::PersistentVertexIndex{i},
+                                                                    graphs::DefaultGraph::PersistentVertexIndex{j})));
                 }
             }
         }
@@ -135,7 +158,7 @@ void testFullyConnected() {
                 const auto& [v1, v2, v3, v4] = quad;
                 CAPTURE(quad);
                 REQUIRE(nTupleOccurrences(quadruples, quad) == 1);
-                REQUIRE(nTupleOccurrences(quadsPrimitive, std::make_tuple(v1, v2, v3, v4)) == 1);
+                REQUIRE(nTupleOccurrences(quadsPrimitive, to_active_ix(std::make_tuple(v1, v2, v3, v4))) == 1);
             }
         }
     }
@@ -169,18 +192,17 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             THEN("this should be reflected in the neighbors structure accessed by particle indices") {
                 REQUIRE(graph.isConnected());
                 REQUIRE(graph.vertices().size() == 2);
-                REQUIRE(graph.vertices().at(0).neighbors().size() == 1);
-                REQUIRE(graph.vertices().at(1).neighbors().size() == 1);
-                REQUIRE(graph.vertices().at(0).neighbors()[0] == 1);
-                REQUIRE(graph.vertices().at(1).neighbors()[0] == 0);
+                REQUIRE(graph.vertices().begin()->neighbors().size() == 1);
+                REQUIRE((++graph.vertices().begin())->neighbors().size() == 1);
+                REQUIRE(graph.vertices().begin()->neighbors()[0].value == 1);
+                REQUIRE((++graph.vertices().begin())->neighbors()[0].value == 0);
             }
             WHEN("removing the first particle") {
                 graph.removeVertex(0);
                 THEN("the size of the graph is 1") {
-                    REQUIRE(graph.vertices().size_raw() == 2);
                     REQUIRE(graph.vertices().size() == 1);
-                    REQUIRE(graph.vertices().at(1).neighbors().empty());
-                    REQUIRE(graph.vertices().at(1).data() == 1);
+                    REQUIRE(graph.vertices().begin()->neighbors().empty());
+                    REQUIRE(graph.vertices().begin()->data() == 1);
                     REQUIRE(graph.nEdges() == 0);
                 }
             }
@@ -227,26 +249,26 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             THEN("expect 4 unique tuples") {
                 REQUIRE(tuples.size() == 4);
 
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(0, 1)));
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(1, 2)));
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(2, 3)));
-                REQUIRE(containsTupleXOR(tuples, std::make_tuple(3, 0)));
+                REQUIRE(containsTupleXOR(tuples, to_persistent_ix(std::make_tuple(0, 1))));
+                REQUIRE(containsTupleXOR(tuples, to_persistent_ix(std::make_tuple(1, 2))));
+                REQUIRE(containsTupleXOR(tuples, to_persistent_ix(std::make_tuple(2, 3))));
+                REQUIRE(containsTupleXOR(tuples, to_persistent_ix(std::make_tuple(3, 0))));
             }
             THEN("expect 4 unique triples") {
                 REQUIRE(triples.size() == 4);
 
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(0, 1, 2)));
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(1, 2, 3)));
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(2, 3, 0)));
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(3, 0, 1)));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(0, 1, 2))));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(1, 2, 3))));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(2, 3, 0))));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(3, 0, 1))));
             }
             THEN("expect 4 unique quadruples") {
                 REQUIRE(quadruples.size() == 4);
 
-                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(3, 0, 1, 2)));
-                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(0, 1, 2, 3)));
-                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(1, 2, 3, 0)));
-                REQUIRE(containsTupleXOR(quadruples, std::make_tuple(2, 3, 0, 1)));
+                REQUIRE(containsTupleXOR(quadruples, to_persistent_ix(std::make_tuple(3, 0, 1, 2))));
+                REQUIRE(containsTupleXOR(quadruples, to_persistent_ix(std::make_tuple(0, 1, 2, 3))));
+                REQUIRE(containsTupleXOR(quadruples, to_persistent_ix(std::make_tuple(1, 2, 3, 0))));
+                REQUIRE(containsTupleXOR(quadruples, to_persistent_ix(std::make_tuple(2, 3, 0, 1))));
             }
         }
 
@@ -270,16 +292,16 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
 
             THEN("Expect 3 unique pairs") {
                 REQUIRE(pairs.size() == 3);
-                REQUIRE(containsTupleXOR(pairs, std::make_tuple(a, b)));
-                REQUIRE(containsTupleXOR(pairs, std::make_tuple(b, c)));
-                REQUIRE(containsTupleXOR(pairs, std::make_tuple(c, a)));
+                REQUIRE(containsTupleXOR(pairs, to_persistent_ix(std::make_tuple(a, b))));
+                REQUIRE(containsTupleXOR(pairs, to_persistent_ix(std::make_tuple(b, c))));
+                REQUIRE(containsTupleXOR(pairs, to_persistent_ix(std::make_tuple(c, a))));
             }
 
             THEN("Expect 3 unique triples") {
                 REQUIRE(triples.size() == 3);
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(a, b, c)));
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(b, c, a)));
-                REQUIRE(containsTupleXOR(triples, std::make_tuple(c, a, b)));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(a, b, c))));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(b, c, a))));
+                REQUIRE(containsTupleXOR(triples, to_persistent_ix(std::make_tuple(c, a, b))));
             }
 
             THEN("Expect 0 unique quadruples") {
@@ -337,7 +359,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             g1.removeVertex(3);
             THEN("The graph is a fully connected graph with 4 vertices") {
                 REQUIRE(g1.vertices().size() == 4);
-                REQUIRE(g1.vertices().size_raw() == 5);
+                REQUIRE(g1.vertices().size_persistent() == 5);
                 REQUIRE(g1.nEdges() == g2.nEdges());
                 for(const auto&[v1, v2] : g1.edges()) {
                     REQUIRE(!g1.vertices().at(v1).deactivated());
@@ -350,7 +372,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                 g1.removeVertex(2);
                 THEN("The graph is a fully connected graph with 3 vertices") {
                     REQUIRE(g1.vertices().size() == 3);
-                    REQUIRE(g1.vertices().size_raw() == 5);
+                    REQUIRE(g1.vertices().size_persistent() == 5);
                     REQUIRE(g1.nEdges() == g2.nEdges() - 3);
                 }
 
@@ -358,7 +380,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                     g1.removeVertex(1);
                     THEN("The graph is a fully connected graph with 2 vertices") {
                         REQUIRE(g1.vertices().size() == 2);
-                        REQUIRE(g1.vertices().size_raw() == 5);
+                        REQUIRE(g1.vertices().size_persistent() == 5);
                         REQUIRE(g1.nEdges() == g2.nEdges() - 3 - 2);
                         for(auto [i1, i2] : g1.edges()) {
                             const auto &v1 = g1.vertices().at(i1);
@@ -371,16 +393,16 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                     }
                 }
 
-                AND_WHEN("Appending g2 to g2 forming an edge between 0 and 3") {
+                AND_WHEN("Appending g2 to g1 forming an edge between 0 in g1 and 3 in g2") {
                     auto mapping = g1.append(g2, 0, 3);
                     THEN("the resulting graph is connected") {
                         REQUIRE(g1.isConnected());
                     }
                     AND_THEN("the graph has the edge [0, mapping(3)]") {
-                        g1.containsEdge(0, mapping.at(3));
+                        g1.containsEdge((g1.begin() + 0).persistent_index(), mapping.at((g2.begin() + 3).persistent_index().value));
                     }
                     AND_WHEN("Removing the edge [0, mapping(3)]") {
-                        g1.removeEdge(0, mapping.at(3));
+                        g1.removeEdge((g1.begin() + 0).persistent_index(), mapping.at((g2.begin() + 3).persistent_index().value));
                         THEN("There are two connected components") {
                             REQUIRE(!g1.isConnected());
                             REQUIRE(g1.connectedComponents().size() == 2);
@@ -414,16 +436,17 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                     AND_THEN("The edges list should be consistent with the vertex neighbors") {
                         for(const auto &component : components) {
                             std::size_t nActive = 0;
-                            for(std::size_t i = 0; i < component.vertices().size(); ++i) {
-                                if(!component.vertices().at(i).deactivated()) {
+                            for(std::size_t i = 0; i < component.vertices().size_persistent(); ++i) {
+                                auto persistentIx = graphs::PersistentIndex{i};
+                                if(!component.vertices().at(persistentIx).deactivated()) {
 
                                     for(auto neighborIndex : component.vertices().at(i).neighbors()) {
                                         REQUIRE(!component.vertices().at(neighborIndex).deactivated());
                                         auto it = std::find_if(std::begin(component.edges()),
-                                                std::end(component.edges()), [i, neighborIndex](const auto& edge) {
+                                                std::end(component.edges()), [persistentIx, neighborIndex](const auto& edge) {
                                                     auto [i1, i2] = edge;
-                                                    return (i1 == i && i2 == neighborIndex) ||
-                                                        (i1 == neighborIndex && i2 == i);
+                                                    return (i1 == persistentIx && i2 == neighborIndex) ||
+                                                        (i1 == neighborIndex && i2 == persistentIx);
                                         });
                                         REQUIRE(it != component.edges().end());
                                     }
