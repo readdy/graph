@@ -634,7 +634,7 @@ public:
      * Yields a const iterator pointing to the end of this container.
      * @return the iterator
      */
-    const_iterator cend_persistent() const noexcept {
+    const_persistent_iterator cend_persistent() const noexcept {
         return _backingVector.cend();
     }
 
