@@ -429,6 +429,23 @@ inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Persistent
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::PersistentVertexIndex> Graph<VertexCollection, Vertex, Rest...>::append(
         const Graph &other,
+        iterator itThis,
+        iterator itOther) {
+    return append(other, itThis.persistent_index(), itOther.persistent_index());
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::PersistentVertexIndex> Graph<VertexCollection, Vertex, Rest...>::append(
+        const Graph &other,
+        persistent_iterator itThis,
+        persistent_iterator itOther) {
+    return append(other, _vertices.persistentIndex(itThis), _vertices.persistentIndex(itOther));
+}
+
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::PersistentVertexIndex> Graph<VertexCollection, Vertex, Rest...>::append(
+        const Graph &other,
         PersistentVertexIndex edgeIndexThis,
         PersistentVertexIndex edgeIndexOther) {
     auto mapping = append(other);

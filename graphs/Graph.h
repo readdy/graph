@@ -152,6 +152,8 @@ public:
      * @param edgeIndexOther index pointing to a live vertex in the other graph
      * @return index mapping
      */
+    std::vector<PersistentVertexIndex> append(const Graph &other, iterator itThis, iterator itOther);
+    std::vector<PersistentVertexIndex> append(const Graph &other, persistent_iterator itThis, persistent_iterator itOther);
     std::vector<PersistentVertexIndex> append(const Graph &other, PersistentVertexIndex edgeIndexThis, PersistentVertexIndex edgeIndexOther);
     std::vector<PersistentVertexIndex> append(const Graph &other, ActiveVertexIndex edgeIndexThis, ActiveVertexIndex edgeIndexOther);
 
