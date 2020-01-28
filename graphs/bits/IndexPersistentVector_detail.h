@@ -38,22 +38,22 @@ struct can_query_active<T, std::void_t<decltype(std::declval<T>().deactivated())
 };
 
 template<typename IteratorL, typename IteratorR>
-bool operator==(const IteratorL &lhs, const IteratorR &rhs) { return lhs.inner_iterator() == rhs.inner_iterator(); }
+bool operator==(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() == rhs.to_persistent(); }
 
 template<typename IteratorL, typename IteratorR>
-bool operator!=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.inner_iterator() != rhs.inner_iterator(); }
+bool operator!=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() != rhs.to_persistent(); }
 
 template<typename IteratorL, typename IteratorR>
-bool operator<(const IteratorL &lhs, const IteratorR &rhs) { return lhs.inner_iterator() < rhs.inner_iterator(); }
+bool operator<(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() < rhs.to_persistent(); }
 
 template<typename IteratorL, typename IteratorR>
-bool operator>(const IteratorL &lhs, const IteratorR &rhs) { return lhs.inner_iterator() > rhs.inner_iterator(); }
+bool operator>(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() > rhs.to_persistent(); }
 
 template<typename IteratorL, typename IteratorR>
-bool operator<=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.inner_iterator() <= rhs.inner_iterator(); }
+bool operator<=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() <= rhs.to_persistent(); }
 
 template<typename IteratorL, typename IteratorR>
-bool operator>=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.inner_iterator() >= rhs.inner_iterator(); }
+bool operator>=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() >= rhs.to_persistent(); }
 
 template<template<typename...> class BackingVector, typename T, typename... Rest>
 class IndexPersistentContainer {
@@ -228,7 +228,7 @@ public:
             return persistent_index_t{static_cast<std::size_t>(std::distance(begin, parent))};
         }
 
-        const_persistent_iterator inner_iterator() const {
+        const_persistent_iterator to_persistent() const {
             return parent;
         }
 
@@ -354,7 +354,7 @@ public:
             return dist - (nBlanksThis - nBlanksThat);
         }
 
-        auto inner_iterator() const {
+        persistent_iterator to_persistent() const {
             return parent;
         }
 
@@ -638,16 +638,24 @@ public:
         return _backingVector.cend();
     }
 
-    active_iterator persistent_to_active_iterator(iterator it) {
+    active_iterator persistent_to_active_iterator(persistent_iterator it) {
         return active_iterator(it, std::begin(_backingVector), std::end(_backingVector), &_blanks);
     }
 
-    const_active_iterator persistent_to_active_iterator(const_iterator it) const {
+    const_active_iterator persistent_to_active_iterator(const_persistent_iterator it) const {
         return cto_active_iterator(it);
     }
 
-    const_active_iterator cpersistent_to_active_iterator(const_iterator it) const {
+    const_active_iterator cpersistent_to_active_iterator(const_persistent_iterator it) const {
         return const_active_iterator(it, std::begin(_backingVector), std::end(_backingVector), &_blanks);
+    }
+
+    [[nodiscard]] persistent_index_t persistentIndex(active_iterator it) const {
+        return it.persistent_index();
+    }
+
+    [[nodiscard]] persistent_index_t persistentIndex(const_persistent_iterator it) const {
+        return {static_cast<std::size_t>(std::distance(std::begin(_backingVector), it))};
     }
 
 private:

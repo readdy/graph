@@ -94,6 +94,11 @@ inline bool Graph<VertexCollection, Vertex, Rest...>::containsEdge(const Edge &e
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline bool Graph<VertexCollection, Vertex, Rest...>::containsEdge(iterator v1, iterator v2) const {
+    return containsEdge(v1.persistent_index(), v2.persistent_index());
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline bool Graph<VertexCollection, Vertex, Rest...>::containsEdge(PersistentVertexIndex v1, PersistentVertexIndex v2) const {
     return containsEdge(std::tie(v1, v2));
 }
@@ -112,8 +117,19 @@ inline typename Graph<VertexCollection, Vertex, Rest...>::iterator Graph<VertexC
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(iterator it1, iterator it2) {
-    addEdge(std::distance(_vertices.begin_persistent(), it1.inner_iterator()),
-            std::distance(_vertices.begin_persistent(), it2.inner_iterator()));
+    addEdge(it1.persistent_index(), it2.persistent_index());
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(persistent_iterator it1, persistent_iterator it2) {
+    if(it1->deactivated() || it2->deactivated()) {
+        throw std::invalid_argument("Tried adding an edge between vertices of which at least one was deactivated.");
+    }
+    auto ix1 = _vertices.persistentIndex(it1);
+    auto ix2 = _vertices.persistentIndex(it2);
+    addVertexNeighbor(*it1, ix2);
+    addVertexNeighbor(*it2, ix1);
+    _edges.push_back(std::make_tuple(ix1, ix2));
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
@@ -128,11 +144,7 @@ inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(ActiveVertexIndex 
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline void Graph<VertexCollection, Vertex, Rest...>::addEdge(PersistentVertexIndex ix1, PersistentVertexIndex ix2) {
-    auto &v1 = *(_vertices.begin_persistent() + ix1.value);
-    auto &v2 = *(_vertices.begin_persistent() + ix2.value);
-    addVertexNeighbor(v1, ix2);
-    addVertexNeighbor(v2, ix1);
-    _edges.push_back(std::make_tuple(ix1, ix2));
+    addEdge(_vertices.begin_persistent() + ix1.value, _vertices.begin_persistent() + ix2.value);
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
@@ -146,25 +158,33 @@ void Graph<VertexCollection, Vertex, Rest...>::removeEdge(iterator it1, iterator
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+void Graph<VertexCollection, Vertex, Rest...>::removeEdge(persistent_iterator it1, persistent_iterator it2) {
+    if(it1->deactivated() || it2->deactivated()) {
+        throw std::invalid_argument("Tried removing an edge between vertices of which at least one was deactivated.");
+    }
+    auto ix1 = _vertices.persistentIndex(it1);
+    auto ix2 = _vertices.persistentIndex(it2);
+    auto it = std::find_if(_edges.begin(), _edges.end(), [ix1, ix2](const auto& edge) {
+        const auto &[e1, e2] = edge;
+        return (e1 == ix1 && e2 == ix2) || (e1 == ix2 && e2 == ix1);
+    });
+    if(it != edges().end()) {
+        removeVertexNeighbor(*it1, ix2);
+        removeVertexNeighbor(*it2, ix1);
+        _edges.erase(it);
+    } else {
+        throw std::invalid_argument("Tried to remove non-existing edge!");
+    }
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline void Graph<VertexCollection, Vertex, Rest...>::removeEdge(ActiveVertexIndex ix1, ActiveVertexIndex ix2) {
     removeEdge(begin() + ix1, begin() + ix2);
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline void Graph<VertexCollection, Vertex, Rest...>::removeEdge(PersistentVertexIndex ix1, PersistentVertexIndex ix2) {
-    auto &v1 = *(_vertices.begin_persistent() + ix1.value);
-    auto &v2 = *(_vertices.begin_persistent() + ix2.value);
-    auto it = std::find_if(_edges.begin(), _edges.end(), [ix1, ix2](const auto& edge) {
-        const auto &[e1, e2] = edge;
-        return (e1 == ix1 && e2 == ix2) || (e1 == ix2 && e2 == ix1);
-    });
-    if(it != edges().end()) {
-        removeVertexNeighbor(v1, ix2);
-        removeVertexNeighbor(v2, ix1);
-        _edges.erase(it);
-    } else {
-        throw std::invalid_argument(fmt::format("Tried to remove non-existing edge {} - {}", ix1, ix2));
-    }
+    removeEdge(_vertices.begin_persistent() + ix1.value, _vertices.begin_persistent() + ix2.value);
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
@@ -174,16 +194,22 @@ inline void Graph<VertexCollection, Vertex, Rest...>::removeEdge(const Edge &edg
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 void Graph<VertexCollection, Vertex, Rest...>::removeVertex(iterator it) {
-    removeVertex(std::distance(begin(), it));
+    removeVertex(it.to_persistent());
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+void Graph<VertexCollection, Vertex, Rest...>::removeVertex(persistent_iterator it) {
+    auto ix = _vertices.persistentIndex(it);
+    removeNeighborsEdges(ix);
+    _vertices.erase(it);
+    _edges.erase(std::remove_if(_edges.begin(), _edges.end(), [ix](const auto &edge) {
+        return std::get<0>(edge) == ix || std::get<1>(edge) == ix;
+    }), _edges.end());
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline void Graph<VertexCollection, Vertex, Rest...>::removeVertex(PersistentVertexIndex ix) {
-    removeNeighborsEdges(ix);
-    _vertices.erase(_vertices.begin_persistent() + ix.value);
-    _edges.erase(std::remove_if(_edges.begin(), _edges.end(), [ix](const auto &edge) {
-        return std::get<0>(edge) == ix || std::get<1>(edge) == ix;
-    }), _edges.end());
+    removeVertex(_vertices.begin_persistent() + ix.value);
 }
 
 
@@ -444,6 +470,37 @@ inline std::string Graph<VertexCollection, Vertex, Rest...>::gexf() const {
     ss << "</graph>";
     ss << "</gexf>";
     return ss.str();
+}
+
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::persistent_iterator Graph<VertexCollection, Vertex, Rest...>::begin_persistent() {
+    return _vertices.begin_persistent();
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::const_persistent_iterator Graph<VertexCollection, Vertex, Rest...>::begin_persistent() const {
+    return _vertices.cbegin_persistent();
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::const_persistent_iterator Graph<VertexCollection, Vertex, Rest...>::cbegin_persistent() const {
+    return _vertices.cbegin_persistent();
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::persistent_iterator Graph<VertexCollection, Vertex, Rest...>::end_persistent() {
+    return _vertices.end_persistent();
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::const_persistent_iterator Graph<VertexCollection, Vertex, Rest...>::end_persistent() const {
+    return _vertices.cend_persistent();
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+inline typename Graph<VertexCollection, Vertex, Rest...>::const_persistent_iterator Graph<VertexCollection, Vertex, Rest...>::cend_persistent() const {
+    return _vertices.cend_persistent();
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>

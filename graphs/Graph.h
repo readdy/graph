@@ -35,6 +35,9 @@ public:
     using iterator = typename VertexList::iterator;
     using const_iterator = typename VertexList::const_iterator;
 
+    using persistent_iterator = typename VertexList::persistent_iterator;
+    using const_persistent_iterator = typename VertexList::const_persistent_iterator;
+
     Graph();
 
     explicit Graph(VertexList vertexList);
@@ -57,6 +60,14 @@ public:
     const_iterator end() const;
     const_iterator cend() const;
 
+    persistent_iterator begin_persistent();
+    const_persistent_iterator begin_persistent() const;
+    const_persistent_iterator cbegin_persistent() const;
+
+    persistent_iterator end_persistent();
+    const_persistent_iterator end_persistent() const;
+    const_persistent_iterator cend_persistent() const;
+
     const VertexList &vertices() const;
 
     VertexList &vertices();
@@ -69,9 +80,15 @@ public:
 
     bool containsEdge(ActiveVertexIndex v1, ActiveVertexIndex v2) const;
 
+    bool containsEdge(iterator it1, iterator it2) const;
+
+    bool containsEdge(persistent_iterator it1, persistent_iterator it2) const;
+
     iterator addVertex(typename Vertex::data_type data = {});
 
     void addEdge(iterator it1, iterator it2);
+
+    void addEdge(persistent_iterator it1, persistent_iterator it2);
 
     void addEdge(PersistentVertexIndex ix1, PersistentVertexIndex ix2);
 
@@ -81,6 +98,8 @@ public:
 
     void removeEdge(iterator it1, iterator it2);
 
+    void removeEdge(persistent_iterator it1, persistent_iterator it2);
+
     void removeEdge(ActiveVertexIndex ix1, ActiveVertexIndex ix2);
 
     void removeEdge(PersistentVertexIndex ix1, PersistentVertexIndex ix2);
@@ -88,6 +107,8 @@ public:
     void removeEdge(const Edge &edge);
 
     void removeVertex(iterator it);
+
+    void removeVertex(persistent_iterator it);
 
     void removeVertex(ActiveVertexIndex ix);
 
