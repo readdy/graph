@@ -325,6 +325,18 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
             REQUIRE(g2.isConnected());
         }
 
+        THEN("The distance between all vertices is 1 (unless they are the same vertex)") {
+            for(auto it = g1.begin(); it != g1.end(); ++it) {
+                for(auto it2 = g1.cbegin_persistent(); it2 != g1.cend_persistent(); ++it2) {
+                    if(it.persistent_index() != g1.vertices().persistentIndex(it2)) {
+                        REQUIRE(g1.graphDistance(it, it2) == 1);
+                    } else {
+                        REQUIRE(g1.graphDistance(it2, it) == 0);
+                    }
+                }
+            }
+        }
+
         WHEN("Appending g2 to g1") {
             g1.append(g2);
             THEN("g1 becomes disconnected, while g2 is still connected") {

@@ -116,6 +116,9 @@ public:
 
     bool isConnected() const;
 
+    template<typename T1, typename T2>
+    std::int32_t graphDistance(T1 it1, T2 it2) const;
+
     const std::vector<Edge> &edges() const;
 
     std::size_t nEdges() const;
@@ -180,6 +183,26 @@ private:
      * @param v2
      */
     void removeVertexNeighbor(Vertex& v1, PersistentVertexIndex v2);
+
+    template<typename T>
+    auto toPersistentIterator(T it) const {
+        static_assert(std::is_same_v<T, const_persistent_iterator> || std::is_same_v<T, const_iterator> ||
+                std::is_same_v<T, persistent_iterator> || std::is_same_v<T, iterator> ||
+                std::is_same_v<T, PersistentVertexIndex> || std::is_same_v<T, ActiveVertexIndex>);
+        if constexpr (std::is_same_v<T, const_persistent_iterator>) {
+            return it;
+        } else if constexpr (std::is_same_v<T, const_iterator>) {
+            return it.to_persistent();
+        } else if constexpr (std::is_same_v<T, persistent_iterator>) {
+            return it;
+        } else if constexpr (std::is_same_v<T, iterator>) {
+            return it.to_persistent();
+        } else if constexpr (std::is_same_v<T, PersistentVertexIndex>) {
+            return _vertices.begin_persistent() + it.value;
+        } else if constexpr (std::is_same_v<T, ActiveVertexIndex>) {
+            return (begin() + it).to_persistent();
+        }
+    }
 
 };
 

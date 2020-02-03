@@ -264,6 +264,15 @@ inline void Graph<VertexCollection, Vertex, Rest...>::removeVertexNeighbor(Verte
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
+template<typename T1, typename T2>
+std::int32_t Graph<VertexCollection, Vertex, Rest...>::graphDistance(T1 it1, T2 it2) const {
+    const_persistent_iterator it1Persistent = toPersistentIterator(it1);
+    const_persistent_iterator it2Persistent = toPersistentIterator(it2);
+    // todo implement this
+    return -1;
+}
+
+template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
 inline bool Graph<VertexCollection, Vertex, Rest...>::isConnected() const {
     if(_vertices.empty()) return true;
 
