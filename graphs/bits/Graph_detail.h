@@ -268,7 +268,36 @@ template<typename T1, typename T2>
 std::int32_t Graph<VertexCollection, Vertex, Rest...>::graphDistance(T1 it1, T2 it2) const {
     const_persistent_iterator it1Persistent = toPersistentIterator(it1);
     const_persistent_iterator it2Persistent = toPersistentIterator(it2);
-    // todo implement this
+    PersistentIndex ixSource = _vertices.persistentIndex(it1Persistent);
+    PersistentIndex ixTarget = _vertices.persistentIndex(it2Persistent);
+
+    std::vector<char> visited (_vertices.size_persistent(), false);
+    std::vector<std::int32_t> dists (_vertices.size_persistent(), 0);
+
+    std::vector<PersistentVertexIndex> unvisited;
+    unvisited.push_back(ixSource);
+    visited[ixSource.value] = true;
+
+    while(!unvisited.empty()) {
+        auto ix = unvisited.back();
+        unvisited.pop_back();
+        auto dCurr = dists[ix.value];
+
+        const auto &vertex = _vertices.at(ix);
+        for(auto neighbor : vertex.neighbors()) {
+            if(visited[neighbor.value]) {
+                continue;
+            }
+
+            dists[neighbor.value] = dCurr + 1;
+            unvisited.push_back(neighbor);
+            visited[neighbor.value] = true;
+        }
+    }
+
+    if(visited[ixTarget.value]) {
+        return dists[ixTarget.value];
+    }
     return -1;
 }
 
@@ -276,7 +305,7 @@ template<template<typename...> class VertexCollection, typename Vertex, typename
 inline bool Graph<VertexCollection, Vertex, Rest...>::isConnected() const {
     if(_vertices.empty()) return true;
 
-    std::vector<char> visited (_vertices.size(), false);
+    std::vector<char> visited (_vertices.size_persistent(), false);
 
     std::vector<PersistentVertexIndex> unvisited;
     unvisited.reserve(_vertices.size_persistent());

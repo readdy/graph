@@ -116,6 +116,15 @@ public:
 
     bool isConnected() const;
 
+    /**
+     * Find shortest distance between two vertices in a graph.
+     *
+     * @tparam T1 vertex1 type
+     * @tparam T2 vertex2 type
+     * @param it1 vertex1
+     * @param it2 vertex2
+     * @param leq early stopping, if -1 ignore     * @return shortest distance or -1 if there is no path
+     */
     template<typename T1, typename T2>
     std::int32_t graphDistance(T1 it1, T2 it2) const;
 

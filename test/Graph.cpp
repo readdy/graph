@@ -314,6 +314,21 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
     testFullyConnected<7>();
     testFullyConnected<8>();
 
+    GIVEN("Three fully connected graphs, connected by one edge each g1 -- g2 -- g3") {
+        auto g1 = fullyConnectedGraph(5);
+        auto g2 = fullyConnectedGraph(5);
+        auto g3 = fullyConnectedGraph(5);
+        auto mapping2 = g1.append(g2, g1.begin(), g2.begin());
+        AND_THEN("the graph has the edge [0, mapping(0)]") {
+            REQUIRE(g1.containsEdge((g1.begin() + 0).persistent_index(), mapping2.at((g2.begin() + 0).persistent_index().value)));
+        }
+        auto mapping3 = g1.append(g3, --g1.end(), g3.begin());
+        AND_THEN("the graph has the edge [9, mapping(0)]") {
+            REQUIRE(g1.containsEdge((g1.begin() + 9).persistent_index(), mapping2.at((g3.begin() + 0).persistent_index().value)));
+        }
+        REQUIRE(g1.graphDistance(g1.begin()+1, --g1.end()) == 5);
+    }
+
     GIVEN("A fully connected graph g1 of size 5 and a fully connected graph g2 of size 4") {
         auto g1 = fullyConnectedGraph(5);
         auto g1Copy = g1;
@@ -411,7 +426,7 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
                         REQUIRE(g1.isConnected());
                     }
                     AND_THEN("the graph has the edge [0, mapping(3)]") {
-                        g1.containsEdge((g1.begin() + 0).persistent_index(), mapping.at((g2.begin() + 3).persistent_index().value));
+                        REQUIRE(g1.containsEdge((g1.begin() + 0).persistent_index(), mapping.at((g2.begin() + 3).persistent_index().value)));
                     }
                     AND_WHEN("Removing the edge [0, mapping(3)]") {
                         g1.removeEdge((g1.begin() + 0).persistent_index(), mapping.at((g2.begin() + 3).persistent_index().value));
