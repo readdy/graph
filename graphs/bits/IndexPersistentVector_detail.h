@@ -671,8 +671,8 @@ private:
         _blanks.insert(it, val);
     }
 
-    BlanksList _blanks;
-    BackingVector<T, Rest...> _backingVector;
+    BlanksList _blanks {};
+    BackingVector<T, Rest...> _backingVector {};
 };
 
 }
