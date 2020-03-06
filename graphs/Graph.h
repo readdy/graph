@@ -84,7 +84,7 @@ public:
 
     bool containsEdge(persistent_iterator it1, persistent_iterator it2) const;
 
-    iterator addVertex(typename Vertex::data_type data = {});
+    PersistentVertexIndex addVertex(typename Vertex::data_type data = {});
 
     void addEdge(iterator it1, iterator it2);
 

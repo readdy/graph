@@ -473,15 +473,15 @@ public:
      * @return an iterator pointed to the emplaced element
      */
     template<typename... Args>
-    iterator emplace_back(Args &&... args) {
+    PersistentIndex emplace_back(Args &&... args) {
         if (_blanks.empty()) {
             _backingVector.emplace_back(std::forward<Args>(args)...);
-            return {std::prev(_backingVector.end()), _backingVector.begin(), _backingVector.end(), &_blanks};
+            return {_backingVector.size() - 1};
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backingVector.get_allocator().construct(&*_backingVector.begin() + idx.value, std::forward<Args>(args)...);
-            return {_backingVector.begin() + idx.value, _backingVector.begin(), _backingVector.end(), &_blanks};
+            return {idx};
         }
     }
 
