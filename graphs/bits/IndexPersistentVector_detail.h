@@ -206,9 +206,11 @@ public:
             auto pos = std::distance(begin, parent);
             auto rhsPos = std::distance(begin, rhs.parent);
             auto nBlanksThis = std::distance(blanksPtr->begin(),
-                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos));
+                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), persistent_index_t{
+                                                     static_cast<std::size_t>(pos)}));
             auto nBlanksThat = std::distance(blanksPtr->begin(),
-                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), rhsPos));
+                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), persistent_index_t{
+                                                     static_cast<std::size_t>(rhsPos)}));
             return dist - (nBlanksThis - nBlanksThat);
         }
 
