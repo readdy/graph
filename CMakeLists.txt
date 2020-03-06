@@ -23,7 +23,7 @@ set(${PROJECT_NAME}_SOURCES
 target_sources(${PROJECT_NAME} INTERFACE ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(${PROJECT_NAME} INTERFACE fmt::fmt-header-only)
 
-if (NOT ${PROJECT_NAME}_IS_SUBPROJECT)
+if (NOT GRAPHS_IS_SUBPROJECT)
     option(${PROJECT_NAME}_BUILD_TESTING "Build ${PROJECT_NAME} tests" ON)
 endif()
 
