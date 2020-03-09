@@ -522,7 +522,7 @@ inline std::string Graph<VertexCollection, Vertex, Rest...>::gexf() const {
         ss << "<edges>";
         std::size_t id = 0;
         for(auto [i1, i2] : _edges) {
-            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1, i2);
+            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1.value, i2.value);
             ++id;
         }
         ss << "</edges>";
