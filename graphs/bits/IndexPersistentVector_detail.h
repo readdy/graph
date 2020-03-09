@@ -657,7 +657,12 @@ public:
     }
 
     [[nodiscard]] persistent_index_t persistentIndex(const_persistent_iterator it) const {
-        return {static_cast<std::size_t>(std::distance(std::begin(_backingVector), it))};
+        auto d = std::distance(std::begin(_backingVector), it);
+        if (d >= 0) {
+            return {static_cast<std::size_t>(d)};
+        } else {
+            throw std::logic_error("Distance between begin and it was negative: d = " + std::to_string(d));
+        }
     }
 
 private:
