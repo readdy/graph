@@ -645,7 +645,7 @@ public:
     }
 
     const_active_iterator persistent_to_active_iterator(const_persistent_iterator it) const {
-        return cto_active_iterator(it);
+        return cpersistent_to_active_iterator(it);
     }
 
     const_active_iterator cpersistent_to_active_iterator(const_persistent_iterator it) const {
