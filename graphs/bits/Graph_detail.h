@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <queue>
 #include "../Graph.h"
 
 namespace graphs {
@@ -111,7 +112,7 @@ inline bool Graph<VertexCollection, Vertex, Rest...>::containsEdge(ActiveVertexI
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
-inline typename Graph<VertexCollection, Vertex, Rest...>::iterator Graph<VertexCollection, Vertex, Rest...>::addVertex(typename Vertex::data_type data) {
+inline typename Graph<VertexCollection, Vertex, Rest...>::PersistentVertexIndex Graph<VertexCollection, Vertex, Rest...>::addVertex(typename Vertex::data_type data) {
     return _vertices.emplace_back(data);
 }
 
@@ -274,13 +275,13 @@ std::int32_t Graph<VertexCollection, Vertex, Rest...>::graphDistance(T1 it1, T2 
     std::vector<char> visited (_vertices.size_persistent(), false);
     std::vector<std::int32_t> dists (_vertices.size_persistent(), 0);
 
-    std::vector<PersistentVertexIndex> unvisited;
-    unvisited.push_back(ixSource);
+    std::queue<PersistentVertexIndex> unvisited;
+    unvisited.push(ixSource);
     visited[ixSource.value] = true;
 
     while(!unvisited.empty()) {
-        auto ix = unvisited.back();
-        unvisited.pop_back();
+        auto ix = unvisited.front();
+        unvisited.pop();
         auto dCurr = dists[ix.value];
 
         const auto &vertex = _vertices.at(ix);
@@ -290,8 +291,12 @@ std::int32_t Graph<VertexCollection, Vertex, Rest...>::graphDistance(T1 it1, T2 
             }
 
             dists[neighbor.value] = dCurr + 1;
-            unvisited.push_back(neighbor);
+            unvisited.push(neighbor);
             visited[neighbor.value] = true;
+
+            if(neighbor == ixTarget) {
+                break;
+            }
         }
     }
 
@@ -433,8 +438,8 @@ inline std::vector<typename Graph<VertexCollection, Vertex, Rest...>::Persistent
         std::size_t ix{0};
         for(auto it = other.vertices().begin_persistent(); it != other.vertices().end_persistent(); ++it, ++ix) {
             if (!it->deactivated()) {
-                auto positionIt = addVertex(it->data());
-                indexMapping.at(ix) = positionIt.persistent_index();
+                auto persistentIndex = addVertex(it->data());
+                indexMapping.at(ix) = persistentIndex;
             }
         }
     }
@@ -517,7 +522,7 @@ inline std::string Graph<VertexCollection, Vertex, Rest...>::gexf() const {
         ss << "<edges>";
         std::size_t id = 0;
         for(auto [i1, i2] : _edges) {
-            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1, i2);
+            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1.value, i2.value);
             ++id;
         }
         ss << "</edges>";

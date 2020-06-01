@@ -183,6 +183,24 @@ SCENARIO("Testing graphs basic functionality", "[graphs]") {
         }
     }
 
+    GIVEN("A graph with source and target and two paths of different length between them") {
+        graphs::Graph<graphs::IndexPersistentVector, graphs::Vertex<std::size_t>> graph;
+        auto source = graph.addVertex(0);
+        auto v1 = graph.addVertex(1);
+        auto v2 = graph.addVertex(2);
+        auto v3 = graph.addVertex(3);
+        auto target = graph.addVertex(4);
+
+        graph.addEdge(source, v1);
+        graph.addEdge(v1, v2);
+        graph.addEdge(v2, target);
+
+        graph.addEdge(source, v3);
+        graph.addEdge(v3, target);
+
+        REQUIRE(graph.graphDistance(source, target) == 2);
+    }
+
     GIVEN("A graph with two vertices") {
         graphs::Graph<graphs::IndexPersistentVector, graphs::Vertex<std::size_t>> graph;
         graph.addVertex(0);

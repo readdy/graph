@@ -206,9 +206,11 @@ public:
             auto pos = std::distance(begin, parent);
             auto rhsPos = std::distance(begin, rhs.parent);
             auto nBlanksThis = std::distance(blanksPtr->begin(),
-                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), pos));
+                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), persistent_index_t{
+                                                     static_cast<std::size_t>(pos)}));
             auto nBlanksThat = std::distance(blanksPtr->begin(),
-                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), rhsPos));
+                                             std::lower_bound(blanksPtr->begin(), blanksPtr->end(), persistent_index_t{
+                                                     static_cast<std::size_t>(rhsPos)}));
             return dist - (nBlanksThis - nBlanksThat);
         }
 
@@ -473,15 +475,15 @@ public:
      * @return an iterator pointed to the emplaced element
      */
     template<typename... Args>
-    iterator emplace_back(Args &&... args) {
+    PersistentIndex emplace_back(Args &&... args) {
         if (_blanks.empty()) {
             _backingVector.emplace_back(std::forward<Args>(args)...);
-            return {std::prev(_backingVector.end()), _backingVector.begin(), _backingVector.end(), &_blanks};
+            return {_backingVector.size() - 1};
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
             _backingVector.get_allocator().construct(&*_backingVector.begin() + idx.value, std::forward<Args>(args)...);
-            return {_backingVector.begin() + idx.value, _backingVector.begin(), _backingVector.end(), &_blanks};
+            return {idx};
         }
     }
 
@@ -643,7 +645,7 @@ public:
     }
 
     const_active_iterator persistent_to_active_iterator(const_persistent_iterator it) const {
-        return cto_active_iterator(it);
+        return cpersistent_to_active_iterator(it);
     }
 
     const_active_iterator cpersistent_to_active_iterator(const_persistent_iterator it) const {
@@ -655,7 +657,12 @@ public:
     }
 
     [[nodiscard]] persistent_index_t persistentIndex(const_persistent_iterator it) const {
-        return {static_cast<std::size_t>(std::distance(std::begin(_backingVector), it))};
+        auto d = std::distance(std::begin(_backingVector), it);
+        if (d >= 0) {
+            return {static_cast<std::size_t>(d)};
+        } else {
+            throw std::logic_error("Distance between begin and it was negative: d = " + std::to_string(d));
+        }
     }
 
 private:
@@ -669,8 +676,8 @@ private:
         _blanks.insert(it, val);
     }
 
-    BlanksList _blanks;
-    BackingVector<T, Rest...> _backingVector;
+    BlanksList _blanks {};
+    BackingVector<T, Rest...> _backingVector {};
 };
 
 }
