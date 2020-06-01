@@ -172,9 +172,9 @@ void Graph<VertexCollection, Vertex, Rest...>::removeEdge(persistent_iterator it
         removeVertexNeighbor(*it1, ix2);
         removeVertexNeighbor(*it2, ix1);
         _edges.erase(it);
-    } else {
+    }/* else {
         throw std::invalid_argument("Tried to remove non-existing edge!");
-    }
+    }*/
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
