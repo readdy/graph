@@ -102,7 +102,7 @@ struct formatter<graphs::Vertex<T...>> {
             if(!first) {
                 ss << ",";
             }
-            ss << neighbor->data();
+            ss << neighbor.value;
             first = false;
         }
         return format_to(ctx.out(), "Vertex[{}, neighbors=[{}]]", v.data(), ss.str());

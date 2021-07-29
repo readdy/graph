@@ -173,9 +173,9 @@ void Graph<VertexCollection, Vertex, Rest...>::removeEdge(persistent_iterator it
         removeVertexNeighbor(*it1, ix2);
         removeVertexNeighbor(*it2, ix1);
         _edges.erase(it);
-    } else {
+    }/* else {
         throw std::invalid_argument("Tried to remove non-existing edge!");
-    }
+    }*/
 }
 
 template<template<typename...> class VertexCollection, typename Vertex, typename... Rest>
@@ -522,7 +522,7 @@ inline std::string Graph<VertexCollection, Vertex, Rest...>::gexf() const {
         ss << "<edges>";
         std::size_t id = 0;
         for(auto [i1, i2] : _edges) {
-            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1, i2);
+            ss << fmt::format(R"(<edge id="{}" source="{}" target="{}" />)", id, i1.value, i2.value);
             ++id;
         }
         ss << "</edges>";
