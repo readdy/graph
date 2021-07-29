@@ -482,7 +482,9 @@ public:
         } else {
             const auto idx = _blanks.back();
             _blanks.pop_back();
-            _backingVector.get_allocator().construct(&*_backingVector.begin() + idx.value, std::forward<Args>(args)...);
+            auto alloc = _backingVector.get_allocator();
+            std::allocator_traits<decltype(alloc)>::construct(
+                    alloc, &*_backingVector.begin() + idx.value, std::forward<Args>(args)...);
             return {idx};
         }
     }
