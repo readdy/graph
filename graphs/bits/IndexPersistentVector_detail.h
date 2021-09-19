@@ -31,28 +31,34 @@ template<typename T>
 struct can_be_deactivated<T, std::void_t<decltype(std::declval<T>().deactivate())>> : std::true_type {
 };
 template<typename T, typename = void>
+struct has_to_persistent : std::false_type {
+};
+template<typename T>
+struct has_to_persistent<T, std::void_t<decltype(std::declval<T>().to_persistent())>> : std::true_type {
+};
+template<typename T, typename = void>
 struct can_query_active : std::false_type {
 };
 template<typename T>
 struct can_query_active<T, std::void_t<decltype(std::declval<T>().deactivated())>> : std::true_type {
 };
 
-template<typename IteratorL, typename IteratorR>
+template<typename IteratorL, typename IteratorR, typename std::enable_if<has_to_persistent<IteratorL>{} && has_to_persistent<IteratorR>{}, bool>::type = true>
 bool operator==(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() == rhs.to_persistent(); }
 
-template<typename IteratorL, typename IteratorR>
+template<typename IteratorL, typename IteratorR, typename std::enable_if<has_to_persistent<IteratorL>{} && has_to_persistent<IteratorR>{}, bool>::type = true>
 bool operator!=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() != rhs.to_persistent(); }
 
-template<typename IteratorL, typename IteratorR>
+template<typename IteratorL, typename IteratorR, typename std::enable_if<has_to_persistent<IteratorL>{} && has_to_persistent<IteratorR>{}, bool>::type = true>
 bool operator<(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() < rhs.to_persistent(); }
 
-template<typename IteratorL, typename IteratorR>
+template<typename IteratorL, typename IteratorR, typename std::enable_if<has_to_persistent<IteratorL>{} && has_to_persistent<IteratorR>{}, bool>::type = true>
 bool operator>(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() > rhs.to_persistent(); }
 
-template<typename IteratorL, typename IteratorR>
+template<typename IteratorL, typename IteratorR, typename std::enable_if<has_to_persistent<IteratorL>{} && has_to_persistent<IteratorR>{}, bool>::type = true>
 bool operator<=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() <= rhs.to_persistent(); }
 
-template<typename IteratorL, typename IteratorR>
+template<typename IteratorL, typename IteratorR, typename std::enable_if<has_to_persistent<IteratorL>{} && has_to_persistent<IteratorR>{}, bool>::type = true>
 bool operator>=(const IteratorL &lhs, const IteratorR &rhs) { return lhs.to_persistent() >= rhs.to_persistent(); }
 
 template<template<typename...> class BackingVector, typename T, typename... Rest>
